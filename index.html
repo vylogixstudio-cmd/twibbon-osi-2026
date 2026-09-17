@@ -712,17 +712,6 @@
                 canvas.width = twibbonWidth;
                 canvas.height = twibbonHeight;
 
-                // Optimasi Khusus Video: Turunkan resolusi maksimal ke 720p (Standar HD Sosmed)
-                // Mengurangi beban rendering CPU hingga 60% agar browser tidak nge-lag/crash
-                if (mediaType === 'video') {
-                    const maxVideoDim = 720;
-                    if (canvas.width > maxVideoDim || canvas.height > maxVideoDim) {
-                        const scale = Math.min(maxVideoDim / canvas.width, maxVideoDim / canvas.height);
-                        canvas.width = Math.floor(canvas.width * scale);
-                        canvas.height = Math.floor(canvas.height * scale);
-                    }
-                }
-
                 if (mediaType === 'image') {
                     progressText.innerText = 'Merender Foto Resolusi Tinggi...';
                     progressBar.style.width = '50%';
@@ -753,7 +742,7 @@
                     }, 'image/jpeg', 0.90);
 
                 } else if (mediaType === 'video') {
-                    progressText.innerText = 'Merender Video HD (720p)...';
+                    progressText.innerText = 'Merender Video (Resolusi Penuh)...';
                     progressNote.innerText = "Proses rendering video HD memakan waktu lebih lama. Mohon tetap buka layar ini.";
 
                     // Unmute video agar audio track bisa ditangkap oleh browser
@@ -789,7 +778,7 @@
 
                     let mediaRecorder;
                     try {
-                        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 4000000 });
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 8000000 });
                     } catch (e) {
                         mediaRecorder = new MediaRecorder(stream);
                     }
