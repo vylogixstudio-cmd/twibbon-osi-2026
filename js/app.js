@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // Twibbon Generator - Main Application
 // ========================================
 
@@ -51,7 +51,6 @@ const finalVideoPreview = document.getElementById('finalVideoPreview');
 const retryBtn = document.getElementById('retryBtn');
 const downloadPublishBtn = document.getElementById('downloadPublishBtn');
 const uploadProgressContainer = document.getElementById('uploadProgressContainer');
-const uploadProgressText = document.getElementById('uploadProgressText');
 
 // ========================================
 // State Variables
@@ -118,18 +117,18 @@ async function initApp() {
                     optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_400,q_auto,f_auto/') + '.jpg';
                     playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
                     const streamUrl = data.url.replace('/upload/', '/upload/w_480,q_auto/');
-                    clickAction = "onclick="window.open('', '_blank')"";
+                    clickAction = `onclick="window.open('${streamUrl}', '_blank')"`;
                 } else {
                     optimizedUrl = data.url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
-                    clickAction = "onclick="window.open('', '_blank')"";
+                    clickAction = `onclick="window.open('${data.url}', '_blank')"`;
                 }
                 
                 div.innerHTML = `
-                    <div  class="w-full h-full relative block">
-                        <img src="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
-                        
+                    <div ${clickAction} class="w-full h-full relative block">
+                        <img src="${optimizedUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
+                        ${playIcon}
                         <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
-                            <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm"></p>
+                            <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${data.participantName || 'Peserta OSI'}</p>
                         </div>
                     </div>
                 `;
@@ -158,7 +157,7 @@ function resetTransform() {
 }
 
 function updateTransformUI() {
-    const transform = `translate(px, px) scale()`;
+    const transform = `translate(${panX}px, ${panY}px) scale(${userScale})`;
     imagePreview.style.transform = transform;
     videoPreview.style.transform = transform;
 }
@@ -279,11 +278,11 @@ fileInput.addEventListener('change', async (e) => {
         fileInput.value = ""; return;
     }
     if (selectedTemplateMode === 'photo' && !file.type.startsWith('image/')) {
-        alert(`Kamu memilih mode , tapi file bukan foto.`);
+        alert(`Kamu memilih mode ${globalLabelPhoto}, tapi file bukan foto.`);
         fileInput.value = ""; return;
     }
     if (selectedTemplateMode === 'video' && !file.type.startsWith('video/')) {
-        alert(`Kamu memilih mode , tapi file bukan video.`);
+        alert(`Kamu memilih mode ${globalLabelVideo}, tapi file bukan video.`);
         fileInput.value = ""; return;
     }
 
@@ -332,7 +331,7 @@ function showPreview() {
 }
 
 // ========================================
-// Rendering Video to Canvas (HD)
+// Rendering Video to Canvas
 // ========================================
 const globalOffCanvas = document.createElement('canvas');
 const globalOffCtx = globalOffCanvas.getContext('2d');
@@ -368,7 +367,7 @@ function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
     ctx.restore();
 }
 
-async function renderBlob(isForPreviewOnly = false) {
+async function renderBlob() {
     return new Promise(async (resolve, reject) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -389,8 +388,6 @@ async function renderBlob(isForPreviewOnly = false) {
             }, 'image/jpeg', 0.90);
 
         } else if (mediaType === 'video') {
-            // Untuk video download: Resolusi Penuh HD. Untuk galeri bisa ditekan.
-            // Gunakan 800x800 agar aman di memori HP Android
             const MAX_VID_DIM = 800;
             const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
             canvas.width = Math.round(tW * scaleDown);
@@ -416,7 +413,6 @@ async function renderBlob(isForPreviewOnly = false) {
 
             let mediaRecorder;
             try {
-                // Bitrate 4Mbps cukup untuk HD dan mencegah encoder Android crash (black screen)
                 mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 4000000 });
             } catch (e) {
                 mediaRecorder = new MediaRecorder(stream);
@@ -454,8 +450,8 @@ async function renderBlob(isForPreviewOnly = false) {
                     if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
                     
                     const percent = Math.min((videoPreview.currentTime / duration) * 100, 100).toFixed(1);
-                    if (progressBar) progressBar.style.width = `%`;
-                    if (progressText) progressText.innerText = `Menyimpan Video HD: %`;
+                    if (progressBar) progressBar.style.width = `${percent}%`;
+                    if (progressText) progressText.innerText = `Memproses Video: ${percent}%`;
                 }
                 requestAnimationFrame(drawFrame);
             };
@@ -465,7 +461,7 @@ async function renderBlob(isForPreviewOnly = false) {
 }
 
 // ========================================
-// Process Button (Lihat Hasil Preview - Tanpa Render Video Lama)
+// Process Button
 // ========================================
 processBtn.addEventListener('click', async () => {
     if (!mediaFile) return;
@@ -476,15 +472,13 @@ processBtn.addEventListener('click', async () => {
         progressBar.style.width = '0%';
         progressText.innerText = 'Menyiapkan Foto...';
         try {
-            finalMediaBlob = await renderBlob(true);
+            finalMediaBlob = await renderBlob();
             showResultPreview(URL.createObjectURL(finalMediaBlob), 'image');
         } catch (e) {
             alert('Gagal: ' + e.message);
             resetUI();
         }
     } else {
-        // Untuk Video: LAZY RENDERING
-        // Langsung masuk ke Step 3 menggunakan CSS Overlay yang sama persis (smooth, resolusi preview optimal)
         showResultPreview(null, 'video_css');
     }
 });
@@ -499,7 +493,6 @@ function showResultPreview(url, type) {
         finalVideoPreview.classList.add('hidden');
         document.getElementById('cssVideoPreviewBox')?.remove();
     } else if (type === 'video_css') {
-        // Pindahkan preview ke hasil secara visual tanpa render
         editorSection.classList.add('hidden');
         resultSection.classList.remove('hidden');
         resultSection.classList.add('flex');
@@ -510,8 +503,7 @@ function showResultPreview(url, type) {
         if (!box) {
             box = document.createElement('div');
             box.id = 'cssVideoPreviewBox';
-            box.className = 'w-full h-auto aspect-square overflow-hidden relative pointer-events-none';
-            // Insert after finalVideoPreview
+            box.className = 'w-full h-auto aspect-square overflow-hidden relative pointer-events-none mb-6 rounded-2xl shadow-xl';
             finalVideoPreview.parentNode.insertBefore(box, finalVideoPreview.nextSibling);
         }
         box.innerHTML = '';
@@ -521,7 +513,6 @@ function showResultPreview(url, type) {
         cloneContainer.style.width = '100%';
         cloneContainer.style.height = '100%';
         
-        // Pindahkan video stream
         const clonedVideo = cloneContainer.querySelector('#videoPreview');
         clonedVideo.src = videoPreview.src;
         clonedVideo.style.transform = videoPreview.style.transform;
@@ -545,7 +536,7 @@ retryBtn.addEventListener('click', () => {
 });
 
 // ========================================
-// Download & Publish (Mulai Render Video Resolusi Penuh Di Sini)
+// Download & Publish
 // ========================================
 downloadPublishBtn.addEventListener('click', async () => {
     const nameValue = participantName.value.trim();
@@ -561,33 +552,31 @@ downloadPublishBtn.addEventListener('click', async () => {
 
     try {
         if (mediaType === 'video') {
-            // Render video HD sekarang
             uploadProgressContainer.classList.remove('hidden');
-            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText">Membuat Video HD...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
+            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Menyiapkan Video HD...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
             
-            // Pause CSS Preview so it doesn't use CPU
+            document.getElementById('progressContainer').classList.remove('hidden');
+            
             const cloneVid = document.querySelector('#cssVideoPreviewBox video');
             if (cloneVid) cloneVid.pause();
 
-            finalMediaBlob = await renderBlob(false);
+            finalMediaBlob = await renderBlob();
             
-            // Update progress UI
+            document.getElementById('progressContainer').classList.add('hidden');
             uploadProgressContainer.innerHTML = '<svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>';
         } else {
             uploadProgressContainer.classList.remove('hidden');
         }
 
-        // Download locally
         const objectUrl = URL.createObjectURL(finalMediaBlob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = objectUrl;
-        a.download = `Twibbon_OSI_HIMASI_.`;
+        a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => document.body.removeChild(a), 100);
 
-        // Upload to Cloudinary
         let uploadBlob = finalMediaBlob;
         const isPhoto = (finalMediaExt === 'jpg' || finalMediaExt === 'png');
         if (isPhoto) {
@@ -596,11 +585,11 @@ downloadPublishBtn.addEventListener('click', async () => {
         }
 
         const formData = new FormData();
-        formData.append('file', uploadBlob, `twibbon.`);
+        formData.append('file', uploadBlob, `twibbon.${finalMediaExt}`);
         formData.append('upload_preset', UPLOAD_PRESET);
         
         const endpoint = isPhoto ? 'image/upload' : 'video/upload';
-        const res = await fetch(`https://api.cloudinary.com/v1_1//`, {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${endpoint}`, {
             method: 'POST', body: formData
         });
         const cloudData = await res.json();
