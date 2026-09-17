@@ -400,14 +400,30 @@ async function renderBlob() {
 
             const stream = canvas.captureStream(30);
             try {
-                const audioStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
-                if (audioStream && audioStream.getAudioTracks().length > 0) {
-                    stream.addTrack(audioStream.getAudioTracks()[0]);
+                if (!window.globalAudioCtx) {
+                    window.globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    window.globalMediaSource = window.globalAudioCtx.createMediaElementSource(videoPreview);
+                    window.globalAudioDest = window.globalAudioCtx.createMediaStreamDestination();
+                    window.globalMediaSource.connect(window.globalAudioDest);
+                    window.globalMediaSource.connect(window.globalAudioCtx.destination);
                 }
-            } catch (err) { console.warn("No audio:", err); }
+                if (window.globalAudioCtx.state === 'suspended') window.globalAudioCtx.resume();
+                const audioTrack = window.globalAudioDest.stream.getAudioTracks()[0];
+                if (audioTrack) stream.addTrack(audioTrack);
+            } catch (err) { 
+                console.warn('Audio fallback error:', err);
+                try {
+                    const fallbackStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
+                    if (fallbackStream && fallbackStream.getAudioTracks().length > 0) {
+                        stream.addTrack(fallbackStream.getAudioTracks()[0]);
+                    }
+                } catch (e) {}
+            }
 
             let mimeType = 'video/webm';
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) mimeType = 'video/webm;codecs=vp9';
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) mimeType = 'video/webm;codecs=vp9';
             else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
             else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
 
@@ -510,6 +526,7 @@ function showResultPreview(url, type) {
         // Pindahkan element asli (TIDAK DI-CLONE)
         box.appendChild(interactiveArea);
         interactiveArea.classList.add('pointer-events-none');
+        videoPreview.muted = false; // UNMUTE AUDIO IN STEP 3 PREVIEW
     }
     resetUI();
 }
