@@ -309,6 +309,7 @@ fileInput.addEventListener('change', async (e) => {
         videoPreview.src = currentMediaUrl;
         videoPreview.classList.remove('hidden');
         videoPreview.onloadedmetadata = () => {
+            videoPreview.muted = false; // Buka suara di Tahap 2
             if (videoPreview.duration > 61) {
                 alert('Durasi video melebihi batas 1 menit.');
                 fileInput.value = ""; mediaFile = null;
@@ -388,10 +389,12 @@ async function renderBlob() {
             }, 'image/jpeg', 0.90);
 
         } else if (mediaType === 'video') {
-            const MAX_VID_DIM = 800;
+            const MAX_VID_DIM = 1920;
             const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
             canvas.width = Math.round(tW * scaleDown);
+            if (canvas.width % 2 !== 0) canvas.width++;
             canvas.height = Math.round(tH * scaleDown);
+            if (canvas.height % 2 !== 0) canvas.height++;
 
             videoPreview.muted = false;
             videoPreview.currentTime = 0;
@@ -429,7 +432,7 @@ async function renderBlob() {
 
             let mediaRecorder;
             try {
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 4000000 });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
             } catch (e) {
                 mediaRecorder = new MediaRecorder(stream);
             }
