@@ -555,6 +555,61 @@ function showResultPreview(url, type) {
         box.appendChild(interactiveArea);
         interactiveArea.classList.add('pointer-events-none');
         videoPreview.muted = false; // UNMUTE AUDIO IN STEP 3 PREVIEW
+        
+        let step3Btn = document.getElementById('step3PlayPauseBtn');
+        if (!step3Btn) {
+            step3Btn = document.createElement('button');
+            step3Btn.id = 'step3PlayPauseBtn';
+            step3Btn.className = 'mt-3 w-full py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm';
+            step3Btn.innerHTML = `
+                <svg class="w-5 h-5 pause-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <svg class="w-5 h-5 play-icon hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Jeda Video</span>
+            `;
+            
+            step3Btn.addEventListener('click', () => {
+                const pIcon = step3Btn.querySelector('.pause-icon');
+                const plIcon = step3Btn.querySelector('.play-icon');
+                const span = step3Btn.querySelector('span');
+                
+                if (videoPreview.paused) {
+                    videoPreview.play();
+                    pIcon.classList.remove('hidden');
+                    plIcon.classList.add('hidden');
+                    span.innerText = 'Jeda Video';
+                    if (playPauseBtn) {
+                        playIcon.classList.add('hidden');
+                        pauseIcon.classList.remove('hidden');
+                    }
+                } else {
+                    videoPreview.pause();
+                    pIcon.classList.add('hidden');
+                    plIcon.classList.remove('hidden');
+                    span.innerText = 'Putar Video';
+                    if (playPauseBtn) {
+                        pauseIcon.classList.add('hidden');
+                        playIcon.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+        
+        // Selalu pastikan ditaruh di bawah interactiveArea
+        box.appendChild(step3Btn);
+        
+        // Reset state
+        const pIcon = step3Btn.querySelector('.pause-icon');
+        const plIcon = step3Btn.querySelector('.play-icon');
+        const span = step3Btn.querySelector('span');
+        if (videoPreview.paused) {
+            pIcon.classList.add('hidden');
+            plIcon.classList.remove('hidden');
+            span.innerText = 'Putar Video';
+        } else {
+            pIcon.classList.remove('hidden');
+            plIcon.classList.add('hidden');
+            span.innerText = 'Jeda Video';
+        }
     }
     resetUI();
 }
