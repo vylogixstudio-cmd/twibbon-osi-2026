@@ -414,7 +414,7 @@ async function renderBlob() {
             }, 'image/jpeg', 0.90);
 
         } else if (mediaType === 'video') {
-            const MAX_VID_DIM = 1920;
+            const MAX_VID_DIM = 1280;
             const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
             canvas.width = Math.round(tW * scaleDown);
             if (canvas.width % 2 !== 0) canvas.width++;
@@ -449,15 +449,15 @@ async function renderBlob() {
             }
 
             let mimeType = 'video/webm';
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) mimeType = 'video/webm;codecs=vp9';
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
             else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
             else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
 
             let mediaRecorder;
             try {
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 3500000 });
             } catch (e) {
                 mediaRecorder = new MediaRecorder(stream);
             }
