@@ -98,7 +98,10 @@
                 <div id="editorSection" class="hidden">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-navy font-bold text-lg">Langkah 2: Unggah Media</h3>
-                        <button id="backToTemplatesBtn" class="text-xs text-blue-600 font-semibold hover:underline bg-blue-50 px-3 py-1.5 rounded-md">Ganti Pilihan</button>
+                        <button id="backToTemplatesBtn" class="text-xs text-navy font-semibold hover:bg-gray-200 bg-gray-100 px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                            Kembali
+                        </button>
                     </div>
 
                     <!-- Upload Section -->
@@ -177,8 +180,8 @@
 
                     <div class="flex flex-col md:flex-row gap-3 w-full">
                         <button id="retryBtn" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                            Buat Ulang
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
+                            Edit Kembali
                         </button>
                         
                         <button id="downloadPublishBtn" class="flex-1 px-4 py-3 bg-gold hover:bg-gold-hover text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border border-yellow-500">
@@ -761,6 +764,33 @@
                 alert('Terjadi kesalahan saat memproses media: ' + error.message);
                 resetUI();
             }
+        });
+
+        // --- Back Button di Langkah 2 ---
+        document.getElementById('backToTemplatesBtn').addEventListener('click', () => {
+            editorSection.classList.add('hidden');
+            document.getElementById('templateSelectionSection').classList.remove('hidden');
+            document.getElementById('templateSelectionSection').classList.add('flex');
+            
+            // Reset upload form
+            fileInput.value = "";
+            mediaFile = null;
+            if (currentMediaUrl) {
+                URL.revokeObjectURL(currentMediaUrl);
+                currentMediaUrl = null;
+            }
+            if (mediaType === 'video') {
+                videoPreview.pause();
+                videoPreview.removeAttribute('src');
+                videoPreview.load();
+            } else {
+                imagePreview.src = "";
+            }
+            
+            previewContainer.classList.add('hidden');
+            actionContainer.classList.add('hidden');
+            actionContainer.classList.remove('flex');
+            resetTransform();
         });
 
         function showResultPreview(url, type) {
