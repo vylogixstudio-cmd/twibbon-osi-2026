@@ -39,6 +39,24 @@ const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
 const progressNote = document.getElementById('progressNote');
 const zoomSlider = document.getElementById('zoomSlider');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const playIcon = document.getElementById('playIcon');
+const pauseIcon = document.getElementById('pauseIcon');
+
+if(playPauseBtn) {
+    playPauseBtn.addEventListener('click', () => {
+        if (videoPreview.paused) {
+            videoPreview.play();
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+        } else {
+            videoPreview.pause();
+            pauseIcon.classList.add('hidden');
+            playIcon.classList.remove('hidden');
+        }
+    });
+}
+
 
 const participantName = document.getElementById('participantName');
 const publicGalleryGrid = document.getElementById('publicGalleryGrid');
@@ -296,9 +314,11 @@ fileInput.addEventListener('change', async (e) => {
         mediaType = 'image';
         twibbonOverlay.src = globalTwibbonPhotoUrl;
         videoPreview.classList.add('hidden');
+    if(playPauseBtn) playPauseBtn.classList.add('hidden');
         videoPreview.pause();
         videoPreview.removeAttribute('src');
         imagePreview.src = currentMediaUrl;
+        if(playPauseBtn) playPauseBtn.classList.add('hidden');
         imagePreview.classList.remove('hidden');
         showPreview();
     } else if (file.type.startsWith('video/')) {
@@ -307,6 +327,11 @@ fileInput.addEventListener('change', async (e) => {
         imagePreview.classList.add('hidden');
         imagePreview.src = "";
         videoPreview.src = currentMediaUrl;
+        if(playPauseBtn) {
+            playPauseBtn.classList.remove('hidden');
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+        }
         videoPreview.classList.remove('hidden');
         videoPreview.onloadedmetadata = () => {
             videoPreview.muted = false; // Buka suara di Tahap 2
