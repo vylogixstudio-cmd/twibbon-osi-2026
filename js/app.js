@@ -1,4 +1,4 @@
-// ========================================
+﻿// ========================================
 // Twibbon Generator - Main Application
 // ========================================
 
@@ -63,7 +63,7 @@ let finalMediaBlob = null;
 let finalMediaExt = null;
 
 let globalTwibbonPhotoUrl = 'twibbon.png';
-let globalTwibbonVideoUrl = 'twibbon_video.png'; // fallback if not set
+let globalTwibbonVideoUrl = 'twibbon_video.png';
 let globalLabelPhoto = 'Untuk Foto';
 let globalLabelVideo = 'Untuk Video';
 
@@ -72,7 +72,6 @@ let globalLabelVideo = 'Untuk Video';
 // ========================================
 async function initApp() {
     try {
-        // 1. Load Dynamic Template from Admin Settings
         const docRef = doc(db, "settings", "twibbon");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -85,7 +84,6 @@ async function initApp() {
                 globalTwibbonVideoUrl = data.twibbonVideoUrl;
                 document.getElementById('previewVideoTwibbon').src = globalTwibbonVideoUrl;
             }
-            
             if (data.labelPhoto) {
                 globalLabelPhoto = data.labelPhoto;
                 document.getElementById('selectPhotoTwibbon').querySelector('span').innerText = globalLabelPhoto;
@@ -94,13 +92,11 @@ async function initApp() {
                 globalLabelVideo = data.labelVideo;
                 document.getElementById('selectVideoTwibbon').querySelector('span').innerText = globalLabelVideo;
             }
-
             if (data.logoLeftUrl) document.getElementById('displayLogoLeft').src = data.logoLeftUrl;
             if (data.logoRightUrl) document.getElementById('displayLogoRight').src = data.logoRightUrl;
             if (data.logoTextUrl) document.getElementById('displayLogoText').src = data.logoTextUrl;
         }
 
-        // 2. Load Gallery
         const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"), limit(20));
         const querySnapshot = await getDocs(q);
         
@@ -118,24 +114,22 @@ async function initApp() {
                 let clickAction = '';
                 
                 if (data.type === 'video') {
-                    // Cloudinary: Get .jpg thumbnail of the video
                     let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
                     optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_400,q_auto,f_auto/') + '.jpg';
                     playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
-                    // Streaming: pakai resolusi 480p supaya ringan saat ditonton
                     const streamUrl = data.url.replace('/upload/', '/upload/w_480,q_auto/');
-                    clickAction = `onclick="window.open('${streamUrl}', '_blank')"`;
+                    clickAction = "onclick="window.open('', '_blank')"";
                 } else {
                     optimizedUrl = data.url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
-                    clickAction = `onclick="window.open('${data.url}', '_blank')"`;
+                    clickAction = "onclick="window.open('', '_blank')"";
                 }
                 
                 div.innerHTML = `
-                    <div ${clickAction} class="w-full h-full relative block">
-                        <img src="${optimizedUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
-                        ${playIcon}
+                    <div  class="w-full h-full relative block">
+                        <img src="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
+                        
                         <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
-                            <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${data.participantName || 'Peserta OSI'}</p>
+                            <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm"></p>
                         </div>
                     </div>
                 `;
@@ -147,12 +141,10 @@ async function initApp() {
         publicGalleryGrid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-4">Gagal memuat galeri.</p>';
     }
 }
-
-// Run init on load
 initApp();
 
 // ========================================
-// Pan & Zoom Variables
+// Pan & Zoom
 // ========================================
 let panX = 0, panY = 0, userScale = 1;
 let isDragging = false, startX, startY;
@@ -166,20 +158,15 @@ function resetTransform() {
 }
 
 function updateTransformUI() {
-    const transform = `translate(${panX}px, ${panY}px) scale(${userScale})`;
+    const transform = `translate(px, px) scale()`;
     imagePreview.style.transform = transform;
     videoPreview.style.transform = transform;
 }
 
-// ========================================
-// Event Listeners: Pan & Zoom
-// ========================================
 zoomSlider.addEventListener('input', (e) => {
     userScale = parseFloat(e.target.value);
     updateTransformUI();
 });
-
-// Mouse Pan
 interactiveArea.addEventListener('mousedown', (e) => {
     isDragging = true;
     startX = e.clientX - panX;
@@ -192,8 +179,6 @@ window.addEventListener('mousemove', (e) => {
     updateTransformUI();
 });
 window.addEventListener('mouseup', () => { isDragging = false; });
-
-// Touch Pan & Zoom (Pinch)
 interactiveArea.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
         isDragging = true;
@@ -201,24 +186,19 @@ interactiveArea.addEventListener('touchstart', (e) => {
         startY = e.touches[0].clientY - panY;
     } else if (e.touches.length === 2) {
         isDragging = false;
-        initialPinchDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-        );
+        initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         initialScale = userScale;
     }
 });
 interactiveArea.addEventListener('touchmove', (e) => {
-    e.preventDefault(); // Prevent page scroll
     if (e.touches.length === 1 && isDragging) {
+        e.preventDefault();
         panX = e.touches[0].clientX - startX;
         panY = e.touches[0].clientY - startY;
         updateTransformUI();
     } else if (e.touches.length === 2 && initialPinchDistance) {
-        const currentDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-        );
+        e.preventDefault();
+        const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         userScale = initialScale * (currentDistance / initialPinchDistance);
         userScale = Math.max(0.1, Math.min(userScale, 3));
         zoomSlider.value = userScale;
@@ -226,11 +206,8 @@ interactiveArea.addEventListener('touchmove', (e) => {
     }
 }, { passive: false });
 window.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-        initialPinchDistance = null;
-    }
+    if (e.touches.length < 2) initialPinchDistance = null;
     if (e.touches.length === 1) {
-        // Restart drag from current single touch to prevent jumping
         startX = e.touches[0].clientX - panX;
         startY = e.touches[0].clientY - panY;
         isDragging = true;
@@ -238,19 +215,16 @@ window.addEventListener('touchend', (e) => {
         isDragging = false;
     }
 });
-
-// Mouse Wheel Zoom
 interactiveArea.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const zoomSensitivity = 0.002;
-    userScale -= e.deltaY * zoomSensitivity;
+    userScale -= e.deltaY * 0.002;
     userScale = Math.max(0.1, Math.min(userScale, 3));
     zoomSlider.value = userScale;
     updateTransformUI();
 }, { passive: false });
 
 // ========================================
-// Navigation: Template Selection ↔ Editor
+// Navigation
 // ========================================
 const templateSelectionSection = document.getElementById('templateSelectionSection');
 const selectPhotoTwibbon = document.getElementById('selectPhotoTwibbon');
@@ -259,7 +233,7 @@ const backToTemplatesBtn = document.getElementById('backToTemplatesBtn');
 const uploadHintText = document.getElementById('uploadHintText');
 const uploadHintSubtext = document.getElementById('uploadHintSubtext');
 
-let selectedTemplateMode = 'photo'; // default
+let selectedTemplateMode = 'photo';
 
 function switchToEditor(mode) {
     selectedTemplateMode = mode;
@@ -268,17 +242,14 @@ function switchToEditor(mode) {
 
     if (mode === 'photo') {
         twibbonOverlay.src = globalTwibbonPhotoUrl;
-        // fileInput.accept = "image/*"; // Removed accept due to Xiaomi bug
         uploadHintText.innerText = "Klik untuk memilih " + globalLabelPhoto;
         uploadHintSubtext.innerText = "JPG, PNG (Maksimal 150 MB)";
     } else {
         twibbonOverlay.src = globalTwibbonVideoUrl;
-        // fileInput.accept = "video/*"; // Removed accept due to Xiaomi bug
         uploadHintText.innerText = "Klik untuk memilih " + globalLabelVideo;
         uploadHintSubtext.innerText = "MP4, WEBM (Durasi Max. 1 Menit)";
     }
     
-    // Clean up old state if switching modes
     fileInput.value = "";
     previewContainer.classList.add('hidden');
     actionContainer.classList.add('hidden');
@@ -291,87 +262,63 @@ function switchToEditor(mode) {
 
 selectPhotoTwibbon.addEventListener('click', () => switchToEditor('photo'));
 selectVideoTwibbon.addEventListener('click', () => switchToEditor('video'));
-
 backToTemplatesBtn.addEventListener('click', () => {
     editorSection.classList.add('hidden');
     templateSelectionSection.classList.remove('hidden');
 });
 
 // ========================================
-// File Upload Handler
+// File Upload
 // ========================================
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Batas maksimal 150MB
     if (file.size > 150 * 1024 * 1024) {
         alert('Waduh, ukuran filemu terlalu besar! Maksimal 150 MB ya. Coba kompres dulu.');
-        fileInput.value = "";
-        return;
+        fileInput.value = ""; return;
     }
-
-    // Validasi mode vs tipe file
     if (selectedTemplateMode === 'photo' && !file.type.startsWith('image/')) {
-        alert(`Kamu memilih mode ${globalLabelPhoto}, tapi file yang dipilih bukan foto. Silakan pilih foto, atau kembali dan pilih mode lainnya.`);
-        fileInput.value = "";
-        return;
+        alert(`Kamu memilih mode , tapi file bukan foto.`);
+        fileInput.value = ""; return;
     }
     if (selectedTemplateMode === 'video' && !file.type.startsWith('video/')) {
-        alert(`Kamu memilih mode ${globalLabelVideo}, tapi file yang dipilih bukan video. Silakan pilih video, atau kembali dan pilih mode lainnya.`);
-        fileInput.value = "";
-        return;
+        alert(`Kamu memilih mode , tapi file bukan video.`);
+        fileInput.value = ""; return;
     }
 
-    if (currentMediaUrl) {
-        URL.revokeObjectURL(currentMediaUrl);
-    }
+    if (currentMediaUrl) URL.revokeObjectURL(currentMediaUrl);
 
     mediaFile = file;
     currentMediaUrl = URL.createObjectURL(file);
-    resetTransform(); // Reset posisi gambar tiap upload baru
+    resetTransform();
 
     if (file.type.startsWith('image/')) {
         mediaType = 'image';
         twibbonOverlay.src = globalTwibbonPhotoUrl;
-        
         videoPreview.classList.add('hidden');
         videoPreview.pause();
         videoPreview.removeAttribute('src');
-        videoPreview.load(); 
-        
         imagePreview.src = currentMediaUrl;
         imagePreview.classList.remove('hidden');
-        
         showPreview();
     } else if (file.type.startsWith('video/')) {
         mediaType = 'video';
         twibbonOverlay.src = globalTwibbonVideoUrl;
-        
         imagePreview.classList.add('hidden');
         imagePreview.src = "";
-        
         videoPreview.src = currentMediaUrl;
         videoPreview.classList.remove('hidden');
-        
         videoPreview.onloadedmetadata = () => {
             if (videoPreview.duration > 61) {
-                alert('Durasi video melebihi batas maksimal 1 menit (60 detik). Silakan pilih video yang lebih pendek.');
-                fileInput.value = "";
-                mediaFile = null;
+                alert('Durasi video melebihi batas 1 menit.');
+                fileInput.value = ""; mediaFile = null;
                 previewContainer.classList.add('hidden');
-                actionContainer.classList.add('hidden');
                 return;
             }
-            videoPreview.play().catch(err => console.log('Autoplay dicegah browser, aman diabaikan.', err));
+            videoPreview.play().catch(err => console.log('Autoplay dicegah', err));
             showPreview();
         };
-
-        videoPreview.onerror = () => {
-            alert('Format video tidak didukung atau file rusak.');
-        };
-    } else {
-        alert('Format file tidak didukung. Harap unggah Gambar atau Video.');
     }
 });
 
@@ -379,33 +326,26 @@ function showPreview() {
     previewContainer.classList.remove('hidden');
     actionContainer.classList.remove('hidden');
     actionContainer.classList.add('flex');
-    
     processBtn.disabled = false;
     processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     progressContainer.classList.add('hidden');
 }
 
 // ========================================
-// Canvas Rendering (Cover Fit + Pan/Zoom)
+// Rendering Video to Canvas (HD)
 // ========================================
-
-// Gunakan satu offscreen canvas secara global agar tidak terjadi memory leak saat merender video frame-by-frame
 const globalOffCanvas = document.createElement('canvas');
 const globalOffCtx = globalOffCanvas.getContext('2d');
 
 function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
     const mediaWidth = isVideo ? media.videoWidth : media.naturalWidth;
     const mediaHeight = isVideo ? media.videoHeight : media.naturalHeight;
-    
     if (!mediaWidth || !mediaHeight) return;
 
-    // Pastikan ukuran offscreen canvas sesuai
     if (globalOffCanvas.width !== canvasWidth || globalOffCanvas.height !== canvasHeight) {
         globalOffCanvas.width = canvasWidth;
         globalOffCanvas.height = canvasHeight;
     }
-
-    // Bersihkan offscreen canvas sebelum menggambar
     globalOffCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     const scaleCover = Math.max(canvasWidth / mediaWidth, canvasHeight / mediaHeight);
@@ -413,264 +353,201 @@ function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
     const defaultH = mediaHeight * scaleCover;
     const defaultX = (canvasWidth - defaultW) / 2;
     const defaultY = (canvasHeight - defaultH) / 2;
-    
     globalOffCtx.drawImage(media, defaultX, defaultY, defaultW, defaultH);
 
-    // 2. Terapkan pan & zoom ke offscreen canvas (yang sudah ter-crop) ke main canvas
     const previewRect = interactiveArea.getBoundingClientRect();
     const ratioX = canvasWidth / previewRect.width;
     const ratioY = canvasHeight / previewRect.height;
     
     ctx.save();
-    
     ctx.translate(canvasWidth / 2, canvasHeight / 2);
     ctx.translate(panX * ratioX, panY * ratioY);
     ctx.scale(userScale, userScale);
     ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
-    
     ctx.drawImage(globalOffCanvas, 0, 0);
-    
     ctx.restore();
 }
 
+async function renderBlob(isForPreviewOnly = false) {
+    return new Promise(async (resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const tW = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
+        const tH = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
+        
+        if (mediaType === 'image') {
+            canvas.width = tW;
+            canvas.height = tH;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawCover(ctx, imagePreview, canvas.width, canvas.height, false);
+            if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob((blob) => {
+                finalMediaExt = 'jpg';
+                resolve(blob);
+            }, 'image/jpeg', 0.90);
+
+        } else if (mediaType === 'video') {
+            // Untuk video download: Resolusi Penuh HD. Untuk galeri bisa ditekan.
+            // Gunakan 800x800 agar aman di memori HP Android
+            const MAX_VID_DIM = 800;
+            const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
+            canvas.width = Math.round(tW * scaleDown);
+            canvas.height = Math.round(tH * scaleDown);
+
+            videoPreview.muted = false;
+            videoPreview.currentTime = 0;
+            videoPreview.loop = false;
+            await videoPreview.play().catch(e => reject(e));
+
+            const stream = canvas.captureStream(30);
+            try {
+                const audioStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
+                if (audioStream && audioStream.getAudioTracks().length > 0) {
+                    stream.addTrack(audioStream.getAudioTracks()[0]);
+                }
+            } catch (err) { console.warn("No audio:", err); }
+
+            let mimeType = 'video/webm';
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) mimeType = 'video/webm;codecs=vp9';
+            else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
+
+            let mediaRecorder;
+            try {
+                // Bitrate 4Mbps cukup untuk HD dan mencegah encoder Android crash (black screen)
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 4000000 });
+            } catch (e) {
+                mediaRecorder = new MediaRecorder(stream);
+            }
+
+            const chunks = [];
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                try {
+                    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
+                    finalMediaExt = (mediaRecorder.mimeType || mimeType).includes('mp4') ? 'mp4' : 'webm';
+                    resolve(blob);
+                } catch (err) { reject(err); }
+                finally {
+                    videoPreview.muted = true;
+                    videoPreview.pause();
+                }
+            };
+            
+            mediaRecorder.start(100);
+            const duration = videoPreview.duration || 1;
+            let lastDrawTime = 0;
+            const frameInterval = 1000 / 30;
+            
+            const drawFrame = (timestamp) => {
+                if (videoPreview.paused || videoPreview.ended) {
+                    if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+                    return;
+                }
+                if (timestamp - lastDrawTime >= frameInterval) {
+                    lastDrawTime = timestamp;
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
+                    if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
+                    
+                    const percent = Math.min((videoPreview.currentTime / duration) * 100, 100).toFixed(1);
+                    if (progressBar) progressBar.style.width = `%`;
+                    if (progressText) progressText.innerText = `Menyimpan Video HD: %`;
+                }
+                requestAnimationFrame(drawFrame);
+            };
+            requestAnimationFrame(drawFrame);
+        }
+    });
+}
+
 // ========================================
-// Process Button: Render Twibbon
+// Process Button (Lihat Hasil Preview - Tanpa Render Video Lama)
 // ========================================
 processBtn.addEventListener('click', async () => {
     if (!mediaFile) return;
 
-    // Trik khusus untuk HP (iOS/Android) agar video bisa diputar
-    if (mediaType === 'video') {
-        videoPreview.muted = true;
-        videoPreview.play().catch(e => console.log('Bypass play', e));
-        videoPreview.pause();
-    }
-
-    processBtn.disabled = true;
-    processBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    uploadLabel.classList.add('disabled-label');
-    fileInput.disabled = true;
-    
-    progressContainer.classList.remove('hidden');
-    progressBar.style.width = '0%';
-    progressText.innerText = 'Menyiapkan...';
-
-    try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        const twibbonWidth = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
-        const twibbonHeight = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
-        
-        canvas.width = twibbonWidth;
-        canvas.height = twibbonHeight;
-
-        if (mediaType === 'image') {
-            progressText.innerText = 'Merender Foto Resolusi Tinggi...';
-            progressBar.style.width = '50%';
-            
-            if (!imagePreview.complete) {
-                await new Promise((resolve, reject) => { 
-                    imagePreview.onload = resolve; 
-                    imagePreview.onerror = reject;
-                });
-            }
-
-            // Beri warna dasar putih agar jika ada bagian transparan tidak menjadi hitam di JPEG
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            drawCover(ctx, imagePreview, canvas.width, canvas.height, false);
-            if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
-                ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-            }
-
-            progressBar.style.width = '100%';
-            
-            // Gunakan JPEG dengan kualitas 90% agar ukuran file jauh lebih kecil (< 10MB)
-            canvas.toBlob((blob) => {
-                finalMediaBlob = blob;
-                finalMediaExt = 'jpg';
-                showResultPreview(URL.createObjectURL(blob), 'image');
-            }, 'image/jpeg', 0.90);
-
-        } else if (mediaType === 'video') {
-            progressText.innerText = 'Merender Video (Resolusi Penuh)...';
-            progressNote.innerText = "Proses rendering video HD memakan waktu lebih lama. Mohon tetap buka layar ini.";
-
-            // Unmute video agar audio track bisa ditangkap oleh browser
-            videoPreview.muted = false;
-            videoPreview.currentTime = 0;
-            videoPreview.loop = false;
-            
-            await videoPreview.play().catch(err => {
-                throw new Error('Gagal memutar video untuk direkam.');
-            });
-
-            const stream = canvas.captureStream(30);
-            
-            // Ambil audio dari video asli dan gabungkan ke stream Canvas
-            try {
-                const audioStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
-                if (audioStream) {
-                    const audioTracks = audioStream.getAudioTracks();
-                    if (audioTracks.length > 0) {
-                        stream.addTrack(audioTracks[0]);
-                    }
-                }
-            } catch (err) {
-                console.warn("Gagal menambahkan audio:", err);
-            }
-            
-            let mimeType = 'video/webm';
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-                mimeType = 'video/webm;codecs=vp9';
-            } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-                mimeType = 'video/mp4';
-            }
-
-            let mediaRecorder;
-            try {
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 8000000 });
-            } catch (e) {
-                mediaRecorder = new MediaRecorder(stream);
-            }
-            
-            const chunks = [];
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                try {
-                    finalMediaBlob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
-                    finalMediaExt = (mediaRecorder.mimeType || mimeType).includes('mp4') ? 'mp4' : 'webm';
-                    showResultPreview(URL.createObjectURL(finalMediaBlob), 'video');
-                } catch (err) {
-                    console.error(err);
-                    alert('Gagal memproses file video akhir.');
-                    resetUI();
-                } finally {
-                    videoPreview.muted = true; // Bisukan kembali video sumber
-                    videoPreview.pause();
-                }
-            };
-
-            mediaRecorder.start(100); 
-
-            const duration = videoPreview.duration || 1;
-            let lastDrawTime = 0;
-            const frameInterval = 1000 / 30; // Batasi 30 FPS agar tidak berat
-
-            const drawFrame = (timestamp) => {
-                if (videoPreview.paused || videoPreview.ended) {
-                    if (mediaRecorder.state === 'recording') {
-                        mediaRecorder.stop();
-                    }
-                    return;
-                }
-
-                // Hanya gambar jika sudah waktunya (throttle FPS)
-                if (timestamp - lastDrawTime >= frameInterval) {
-                    lastDrawTime = timestamp;
-
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
-                    if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
-                        ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-                    }
-
-                    const current = videoPreview.currentTime;
-                    const percent = Math.min((current / duration) * 100, 100).toFixed(1);
-                    progressBar.style.width = `${percent}%`;
-                    progressText.innerText = `Memproses Video HD: ${percent}%`;
-                }
-
-                requestAnimationFrame(drawFrame);
-            };
-
-            requestAnimationFrame(drawFrame);
+    if (mediaType === 'image') {
+        processBtn.disabled = true;
+        progressContainer.classList.remove('hidden');
+        progressBar.style.width = '0%';
+        progressText.innerText = 'Menyiapkan Foto...';
+        try {
+            finalMediaBlob = await renderBlob(true);
+            showResultPreview(URL.createObjectURL(finalMediaBlob), 'image');
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+            resetUI();
         }
-    } catch (error) {
-        console.error(error);
-        alert('Terjadi kesalahan saat memproses media: ' + error.message);
-        resetUI();
-    }
-});
-
-// ========================================
-// Back Button (Step 2 → Step 1)
-// ========================================
-document.getElementById('backToTemplatesBtn').addEventListener('click', () => {
-    editorSection.classList.add('hidden');
-    document.getElementById('templateSelectionSection').classList.remove('hidden');
-    document.getElementById('templateSelectionSection').classList.add('flex');
-    
-    // Reset upload form
-    fileInput.value = "";
-    mediaFile = null;
-    if (currentMediaUrl) {
-        URL.revokeObjectURL(currentMediaUrl);
-        currentMediaUrl = null;
-    }
-    if (mediaType === 'video') {
-        videoPreview.pause();
-        videoPreview.removeAttribute('src');
-        videoPreview.load();
     } else {
-        imagePreview.src = "";
+        // Untuk Video: LAZY RENDERING
+        // Langsung masuk ke Step 3 menggunakan CSS Overlay yang sama persis (smooth, resolusi preview optimal)
+        showResultPreview(null, 'video_css');
     }
-    
-    previewContainer.classList.add('hidden');
-    actionContainer.classList.add('hidden');
-    actionContainer.classList.remove('flex');
-    resetTransform();
 });
 
-// ========================================
-// Result Preview (Step 3)
-// ========================================
 function showResultPreview(url, type) {
-    editorSection.classList.add('hidden');
-    resultSection.classList.remove('hidden');
-    resultSection.classList.add('flex');
-    
     if (type === 'image') {
+        editorSection.classList.add('hidden');
+        resultSection.classList.remove('hidden');
+        resultSection.classList.add('flex');
         finalImagePreview.src = url;
         finalImagePreview.classList.remove('hidden');
         finalVideoPreview.classList.add('hidden');
-    } else {
-        finalVideoPreview.src = url;
-        finalVideoPreview.classList.remove('hidden');
+        document.getElementById('cssVideoPreviewBox')?.remove();
+    } else if (type === 'video_css') {
+        // Pindahkan preview ke hasil secara visual tanpa render
+        editorSection.classList.add('hidden');
+        resultSection.classList.remove('hidden');
+        resultSection.classList.add('flex');
         finalImagePreview.classList.add('hidden');
+        finalVideoPreview.classList.add('hidden');
+        
+        let box = document.getElementById('cssVideoPreviewBox');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'cssVideoPreviewBox';
+            box.className = 'w-full h-auto aspect-square overflow-hidden relative pointer-events-none';
+            // Insert after finalVideoPreview
+            finalVideoPreview.parentNode.insertBefore(box, finalVideoPreview.nextSibling);
+        }
+        box.innerHTML = '';
+        const cloneContainer = previewContainer.cloneNode(true);
+        cloneContainer.id = 'clonedPreviewContainer';
+        cloneContainer.classList.remove('hidden');
+        cloneContainer.style.width = '100%';
+        cloneContainer.style.height = '100%';
+        
+        // Pindahkan video stream
+        const clonedVideo = cloneContainer.querySelector('#videoPreview');
+        clonedVideo.src = videoPreview.src;
+        clonedVideo.style.transform = videoPreview.style.transform;
+        clonedVideo.play().catch(e=>console.log(e));
+        
+        box.appendChild(cloneContainer);
     }
-    resetUI(); // reset background state
+    resetUI();
 }
 
-// --- Step 3 Actions ---
 retryBtn.addEventListener('click', () => {
-    // Revoke object URL to free memory
     if (finalImagePreview.src) URL.revokeObjectURL(finalImagePreview.src);
     if (finalVideoPreview.src) URL.revokeObjectURL(finalVideoPreview.src);
-    
     finalMediaBlob = null;
     finalMediaExt = null;
-    
     resultSection.classList.add('hidden');
     resultSection.classList.remove('flex');
     editorSection.classList.remove('hidden');
-    
-    // Note: Keep the chosen file in case they just want to adjust pan/zoom
+    const box = document.getElementById('cssVideoPreviewBox');
+    if (box) box.innerHTML = '';
 });
 
 // ========================================
-// Download & Publish to Gallery
+// Download & Publish (Mulai Render Video Resolusi Penuh Di Sini)
 // ========================================
 downloadPublishBtn.addEventListener('click', async () => {
-    if (!finalMediaBlob) return;
-
     const nameValue = participantName.value.trim();
     if (nameValue === "") {
         alert("Hei! Isi Nama Panggilan dulu dong sebelum masuk galeri hehe.");
@@ -678,46 +555,53 @@ downloadPublishBtn.addEventListener('click', async () => {
         return;
     }
 
-    // 1. Download to device immediately (FULL RESOLUTION)
-    const objectUrl = finalImagePreview.src || finalVideoPreview.src || URL.createObjectURL(finalMediaBlob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = objectUrl;
-    a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => document.body.removeChild(a), 100);
-
-    // 2. Upload to Cloudinary & Firestore
     downloadPublishBtn.disabled = true;
     retryBtn.disabled = true;
     downloadPublishBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    uploadProgressContainer.classList.remove('hidden');
 
     try {
-        // Foto: buat versi low-res (480px) untuk galeri agar ringan
-        // Video: upload as-is, pakai Cloudinary transformation saat tampilkan
+        if (mediaType === 'video') {
+            // Render video HD sekarang
+            uploadProgressContainer.classList.remove('hidden');
+            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText">Membuat Video HD...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
+            
+            // Pause CSS Preview so it doesn't use CPU
+            const cloneVid = document.querySelector('#cssVideoPreviewBox video');
+            if (cloneVid) cloneVid.pause();
+
+            finalMediaBlob = await renderBlob(false);
+            
+            // Update progress UI
+            uploadProgressContainer.innerHTML = '<svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>';
+        } else {
+            uploadProgressContainer.classList.remove('hidden');
+        }
+
+        // Download locally
+        const objectUrl = URL.createObjectURL(finalMediaBlob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = objectUrl;
+        a.download = `Twibbon_OSI_HIMASI_.`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
+
+        // Upload to Cloudinary
         let uploadBlob = finalMediaBlob;
         const isPhoto = (finalMediaExt === 'jpg' || finalMediaExt === 'png');
-        
         if (isPhoto) {
-            try {
-                uploadBlob = await createLowResImageBlob(finalMediaBlob, 480);
-                console.log(`Galeri: ${(finalMediaBlob.size/1024).toFixed(0)}KB → ${(uploadBlob.size/1024).toFixed(0)}KB`);
-            } catch (compressErr) {
-                console.warn('Gagal kompres, upload versi asli:', compressErr);
-                uploadBlob = finalMediaBlob; // fallback ke asli
-            }
+            try { uploadBlob = await createLowResImageBlob(finalMediaBlob, 480); }
+            catch (err) { uploadBlob = finalMediaBlob; }
         }
 
         const formData = new FormData();
-        formData.append('file', uploadBlob, `twibbon.${finalMediaExt}`);
+        formData.append('file', uploadBlob, `twibbon.`);
         formData.append('upload_preset', UPLOAD_PRESET);
         
         const endpoint = isPhoto ? 'image/upload' : 'video/upload';
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${endpoint}`, {
-            method: 'POST',
-            body: formData
+        const res = await fetch(`https://api.cloudinary.com/v1_1//`, {
+            method: 'POST', body: formData
         });
         const cloudData = await res.json();
         
@@ -728,22 +612,18 @@ downloadPublishBtn.addEventListener('click', async () => {
                 type: isPhoto ? 'image' : 'video',
                 createdAt: new Date()
             });
-            initApp(); // refresh gallery
+            initApp();
             
-            // Sembunyikan progress & tombol aksi lama
             uploadProgressContainer.classList.add('hidden');
             document.getElementById('resultActions').classList.add('hidden');
-            // Tampilkan status sukses
-            document.getElementById('successStateContainer').classList.remove('hidden');
-            document.getElementById('successStateContainer').classList.add('flex');
-            
+            document.getElementById('successStateContainer')?.classList.remove('hidden');
+            document.getElementById('successStateContainer')?.classList.add('flex');
         } else {
-            console.error("Cloudinary Error Data:", cloudData);
-            throw new Error(cloudData.error ? cloudData.error.message : "Gagal mendapatkan URL dari Cloudinary");
+            throw new Error(cloudData.error ? cloudData.error.message : "Gagal upload Cloudinary");
         }
     } catch (err) {
-        console.error("Gagal mengunggah ke galeri:", err);
-        alert("Gagal diupload ke Galeri: " + err.message);
+        console.error(err);
+        alert("Gagal: " + err.message);
         downloadPublishBtn.disabled = false;
         retryBtn.disabled = false;
         downloadPublishBtn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -751,9 +631,6 @@ downloadPublishBtn.addEventListener('click', async () => {
     }
 });
 
-// ========================================
-// Utility: Low-Res Image for Gallery Upload
-// ========================================
 function createLowResImageBlob(fullResBlob, maxSize) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -766,28 +643,16 @@ function createLowResImageBlob(fullResBlob, maxSize) {
                 const sCtx = smallCanvas.getContext('2d');
                 sCtx.drawImage(img, 0, 0, smallCanvas.width, smallCanvas.height);
                 smallCanvas.toBlob((blob) => {
-                    URL.revokeObjectURL(img.src); // Bersihkan memory
-                    if (blob) {
-                        resolve(blob);
-                    } else {
-                        reject(new Error('Gagal membuat versi galeri'));
-                    }
+                    URL.revokeObjectURL(img.src);
+                    if (blob) resolve(blob); else reject(new Error('Gagal kompres'));
                 }, 'image/jpeg', 0.70);
-            } catch (err) {
-                reject(err);
-            }
+            } catch (err) { reject(err); }
         };
-        img.onerror = () => {
-            URL.revokeObjectURL(img.src);
-            reject(new Error('Gagal memuat gambar untuk dikompres'));
-        };
+        img.onerror = () => reject(new Error('Gagal muat gambar'));
         img.src = URL.createObjectURL(fullResBlob);
     });
 }
 
-// ========================================
-// Utility: Reset UI State
-// ========================================
 function resetUI() {
     processBtn.disabled = false;
     processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
