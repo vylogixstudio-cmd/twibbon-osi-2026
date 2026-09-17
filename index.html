@@ -254,6 +254,9 @@
         let finalMediaBlob = null;
         let finalMediaExt = null;
         
+        let globalTwibbonPhotoUrl = 'twibbon.png';
+        let globalTwibbonVideoUrl = 'twibbon_video.png'; // fallback if not set
+
         // Initialize dynamic template & gallery
         async function initApp() {
             try {
@@ -262,9 +265,13 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if (data.url) {
-                        twibbonOverlay.src = data.url;
-                        document.getElementById('rawTwibbon').src = data.url;
+                    if (data.twibbonPhotoUrl || data.url) {
+                        globalTwibbonPhotoUrl = data.twibbonPhotoUrl || data.url;
+                        twibbonOverlay.src = globalTwibbonPhotoUrl;
+                        document.getElementById('rawTwibbon').src = globalTwibbonPhotoUrl;
+                    }
+                    if (data.twibbonVideoUrl) {
+                        globalTwibbonVideoUrl = data.twibbonVideoUrl;
                     }
                     if (data.logoLeftUrl) document.getElementById('displayLogoLeft').src = data.logoLeftUrl;
                     if (data.logoRightUrl) document.getElementById('displayLogoRight').src = data.logoRightUrl;
@@ -438,6 +445,7 @@
 
             if (file.type.startsWith('image/')) {
                 mediaType = 'image';
+                twibbonOverlay.src = globalTwibbonPhotoUrl;
                 
                 videoPreview.classList.add('hidden');
                 videoPreview.pause();
@@ -448,12 +456,12 @@
                 imagePreview.classList.remove('hidden');
                 
                 showPreview();
-                
             } else if (file.type.startsWith('video/')) {
                 mediaType = 'video';
+                twibbonOverlay.src = globalTwibbonVideoUrl;
                 
                 imagePreview.classList.add('hidden');
-                imagePreview.removeAttribute('src');
+                imagePreview.src = "";
                 
                 videoPreview.src = currentMediaUrl;
                 videoPreview.classList.remove('hidden');

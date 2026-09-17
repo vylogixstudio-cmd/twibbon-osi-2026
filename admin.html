@@ -65,16 +65,25 @@
                     🖼️ Pengaturan Aset
                 </h3>
                 <div class="flex flex-col gap-6 items-start">
-                    <!-- TWIBBON -->
+                    <!-- TWIBBON (FOTO) -->
                     <div class="w-full border-b pb-4">
-                        <p class="text-sm font-bold text-gray-800 mb-2">Bingkai Twibbon (PNG):</p>
+                        <p class="text-sm font-bold text-gray-800 mb-2">Bingkai Twibbon (Khusus Foto):</p>
                         <div class="bg-gray-100 rounded-lg p-2 border-2 border-dashed border-gray-300 mb-2 w-32 h-32 mx-auto">
-                            <img id="currentTemplatePreview" src="twibbon.png" class="w-full h-full object-contain rounded" alt="Current Template">
+                            <img id="currentTemplatePreview" src="twibbon.png" class="w-full h-full object-contain rounded" alt="Template Foto">
                         </div>
                         <input type="file" id="templateUpload" accept="image/png" class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-yellow-50 file:text-gold hover:file:bg-yellow-100 mb-2">
-                        <button id="saveTemplateBtn" class="w-full bg-gold hover:bg-gold-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Bingkai</button>
+                        <button id="saveTemplateBtn" class="w-full bg-gold hover:bg-gold-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Bingkai Foto</button>
                     </div>
 
+                    <!-- TWIBBON (VIDEO) -->
+                    <div class="w-full border-b pb-4">
+                        <p class="text-sm font-bold text-gray-800 mb-2">Bingkai Twibbon (Khusus Video):</p>
+                        <div class="bg-gray-100 rounded-lg p-2 border-2 border-dashed border-gray-300 mb-2 w-32 h-32 mx-auto">
+                            <img id="currentVideoTemplatePreview" src="twibbon_video.png" class="w-full h-full object-contain rounded" alt="Template Video">
+                        </div>
+                        <input type="file" id="templateVideoUpload" accept="image/png" class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-yellow-50 file:text-gold hover:file:bg-yellow-100 mb-2">
+                        <button id="saveTemplateVideoBtn" class="w-full bg-gold hover:bg-gold-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Bingkai Video</button>
+                    </div>
                     <!-- LOGO KIRI -->
                     <div class="w-full border-b pb-4">
                         <p class="text-sm font-bold text-gray-800 mb-2">Logo Kiri (HIMASI):</p>
@@ -220,7 +229,8 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if (data.url) currentTemplatePreview.src = data.url;
+                    if (data.twibbonPhotoUrl || data.url) currentTemplatePreview.src = data.twibbonPhotoUrl || data.url;
+                    if (data.twibbonVideoUrl) document.getElementById('currentVideoTemplatePreview').src = data.twibbonVideoUrl;
                     if (data.logoLeftUrl) document.getElementById('currentLogoLeft').src = data.logoLeftUrl;
                     if (data.logoRightUrl) document.getElementById('currentLogoRight').src = data.logoRightUrl;
                     if (data.logoTextUrl) document.getElementById('currentLogoText').src = data.logoTextUrl;
@@ -242,6 +252,7 @@
         }
         
         handleLocalPreview('templateUpload', 'currentTemplatePreview');
+        handleLocalPreview('templateVideoUpload', 'currentVideoTemplatePreview');
         handleLocalPreview('logoLeftUpload', 'currentLogoLeft');
         handleLocalPreview('logoRightUpload', 'currentLogoRight');
         handleLocalPreview('logoTextUpload', 'currentLogoText');
@@ -287,11 +298,11 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = originalText;
-                // fileInput.value = ""; // opsional: biarkan saja terisi atau kosongkan
             }
         }
 
-        document.getElementById('saveTemplateBtn').addEventListener('click', () => handleAssetUpload('templateUpload', 'saveTemplateBtn', 'url'));
+        document.getElementById('saveTemplateBtn').addEventListener('click', () => handleAssetUpload('templateUpload', 'saveTemplateBtn', 'twibbonPhotoUrl'));
+        document.getElementById('saveTemplateVideoBtn').addEventListener('click', () => handleAssetUpload('templateVideoUpload', 'saveTemplateVideoBtn', 'twibbonVideoUrl'));
         document.getElementById('saveLogoLeftBtn').addEventListener('click', () => handleAssetUpload('logoLeftUpload', 'saveLogoLeftBtn', 'logoLeftUrl'));
         document.getElementById('saveLogoRightBtn').addEventListener('click', () => handleAssetUpload('logoRightUpload', 'saveLogoRightBtn', 'logoRightUrl'));
         document.getElementById('saveLogoTextBtn').addEventListener('click', () => handleAssetUpload('logoTextUpload', 'saveLogoTextBtn', 'logoTextUrl'));
