@@ -11,11 +11,26 @@
             theme: {
                 extend: {
                     colors: {
-                        navy: { DEFAULT: '#1A2B4C', hover: '#132038' },
-                        gold: { DEFAULT: '#E5AA22', hover: '#CA9318' },
+                        navy: { DEFAULT: '#1A2B4C', hover: '#132038', light: '#2A3C60' },
+                        gold: { DEFAULT: '#E5AA22', hover: '#D49B1A', light: '#F4C14E' },
                         surface: '#F8FAFC',
+                        glass: 'rgba(255, 255, 255, 0.7)',
                     },
-                    fontFamily: { sans: ['Poppins', 'sans-serif'] }
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'glow': '0 0 20px rgba(229, 170, 34, 0.3)',
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        }
+                    }
                 }
             }
         }
@@ -28,192 +43,233 @@
         #interactiveArea:active { cursor: grabbing; }
     </style>
 </head>
-<body class="bg-surface min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 min-h-screen flex flex-col font-sans text-slate-800">
     <!-- Header -->
-    <header class="bg-navy text-white shadow-md">
-        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-3 md:gap-5 flex-wrap">
+    <header class="bg-gradient-to-r from-navy to-navy-light text-white shadow-lg relative overflow-hidden">
+        <!-- Decorative element -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 left-10 w-32 h-32 rounded-full bg-gold opacity-10 blur-2xl pointer-events-none"></div>
+        
+        <div class="container mx-auto px-4 py-4 md:py-5 flex items-center justify-between relative z-10">
+            <div class="flex items-center gap-4 md:gap-6 flex-wrap">
                 <!-- Logos Collaboration Group -->
-                <div class="flex items-center gap-1 md:gap-3">
+                <div class="flex items-center gap-2 md:gap-4 bg-white/10 backdrop-blur-sm p-1.5 md:p-2 rounded-full border border-white/20">
                     <!-- Logo HIMASI (Kiri) -->
-                    <div class="w-14 h-14 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-0.5">
-                        <img id="displayLogoLeft" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo HIMASI" class="w-full h-full object-cover scale-110" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
+                    <div class="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner p-1 transition-transform hover:scale-105">
+                        <img id="displayLogoLeft" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo HIMASI" class="w-full h-full object-contain scale-110" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
                     </div>
 
                     <!-- Simbol Kolaborasi -->
-                    <span class="text-gold font-extrabold text-sm md:text-2xl px-1 flex-shrink-0">✕</span>
+                    <span class="text-gold-light font-extrabold text-sm md:text-xl px-1 flex-shrink-0 opacity-80">✕</span>
 
                     <!-- Logo OSI 2026 / Arci (Kanan) -->
-                    <div class="w-14 h-14 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-0.5">
-                        <img id="displayLogoRight" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo OSI 2026" class="w-full h-full object-cover scale-110" onerror="this.src='logo_osi_text.png'">
+                    <div class="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner p-1 transition-transform hover:scale-105">
+                        <img id="displayLogoRight" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo OSI 2026" class="w-full h-full object-contain scale-110" onerror="this.src='logo_osi_text.png'">
                     </div>
                 </div>
 
                 <!-- Text Branding -->
-                <div class="ml-1">
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-lg md:text-2xl font-bold leading-tight">Twibbon Generator</h1>
-                        <span class="bg-gold text-navy text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">OSI 2026</span>
+                <div class="ml-1 md:ml-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <h1 class="text-xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">Twibbon Generator</h1>
+                        <span class="bg-gradient-to-r from-gold to-gold-light text-navy text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-md shadow-sm uppercase tracking-wider">OSI 2026</span>
                     </div>
-                    <p class="text-xs md:text-sm text-gold font-medium mt-0.5">HIMASI × OSI Universitas Sunan Gresik</p>
+                    <p class="text-xs md:text-sm text-blue-100 font-medium opacity-90">HIMASI × OSI Universitas Sunan Gresik</p>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-7xl">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+    <main class="flex-grow container mx-auto px-4 py-8 md:py-12 max-w-7xl">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
             
             <!-- KOLOM KIRI: EDITOR -->
-            <div class="lg:col-span-5 bg-white rounded-2xl shadow-lg p-6 md:p-8">
-                <div class="text-center mb-8">
-                    <img id="displayLogoText" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="OSI USG 2026" class="h-8 md:h-10 object-contain mx-auto mb-4" onerror="this.style.display='none'">
-                    <h2 class="text-2xl md:text-3xl font-bold text-navy mb-2">Buat Twibbon OSI 2026 Anda</h2>
-                    <p class="text-gray-600 text-sm">Unggah Foto atau Video Anda (Maksimal 1 Menit). Hasil akan dirender dalam kualitas resolusi tinggi (HD).</p>
+            <div class="lg:col-span-5 bg-white/90 backdrop-blur-md border border-white/40 rounded-[2rem] shadow-soft p-6 md:p-10 relative">
+                <div class="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent rounded-[2rem] pointer-events-none"></div>
+                <div class="relative z-10 text-center mb-10">
+                    <img id="displayLogoText" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="OSI USG 2026" class="h-8 md:h-10 object-contain mx-auto mb-5 drop-shadow-sm" onerror="this.style.display='none'">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-navy mb-3 tracking-tight">Buat Twibbon<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-light">OSI 2026</span> Anda</h2>
+                    <p class="text-slate-500 text-sm leading-relaxed max-w-sm mx-auto">Unggah Foto atau Video Anda (Maks. 1 Menit). Hasil dirender dalam resolusi tinggi (HD).</p>
                 </div>
 
                 <!-- PILIH TEMPLATE -->
-                <div id="templateSelectionSection" class="mb-8 flex flex-col items-center border-b border-gray-200 pb-8">
-                    <h3 class="text-navy font-bold mb-4 text-lg">Langkah 1: Pilih Twibbon</h3>
-                    <div class="flex gap-4 w-full justify-center">
+                <div id="templateSelectionSection" class="relative z-10 mb-8 flex flex-col items-center border-b border-slate-100 pb-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-navy text-white font-bold text-sm">1</span>
+                        <h3 class="text-navy font-bold text-lg">Pilih Format Twibbon</h3>
+                    </div>
+                    <div class="flex gap-5 w-full justify-center">
                         <!-- Pilihan Foto -->
-                        <div id="selectPhotoTwibbon" class="cursor-pointer border-2 border-transparent hover:border-gold rounded-xl p-2 transition-all group text-center bg-gray-50 flex-1 max-w-[160px]">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden relative shadow-sm flex items-center justify-center mb-3 mx-auto">
-                                <img id="previewPhotoTwibbon" crossorigin="anonymous" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" class="w-full h-full object-contain" alt="Twibbon Foto">
+                        <div id="selectPhotoTwibbon" class="cursor-pointer rounded-2xl p-3 transition-all duration-300 group text-center bg-white border border-slate-200 hover:border-gold hover:shadow-glow flex-1 max-w-[170px] hover:-translate-y-1">
+                            <div class="w-full aspect-square bg-slate-50 rounded-xl border border-slate-100 overflow-hidden relative shadow-inner flex items-center justify-center mb-4 mx-auto group-hover:scale-95 transition-transform duration-300">
+                                <img id="previewPhotoTwibbon" crossorigin="anonymous" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" class="w-full h-full object-contain p-2" alt="Twibbon Foto">
                             </div>
-                            <span class="text-sm font-bold text-navy group-hover:text-gold transition-colors block border border-gray-300 rounded py-1.5 bg-white">Untuk Foto</span>
+                            <span class="text-sm font-semibold text-slate-700 group-hover:text-gold transition-colors block border border-slate-100 rounded-lg py-2 bg-slate-50 group-hover:bg-gold/10">Untuk Foto</span>
                         </div>
                         
                         <!-- Pilihan Video -->
-                        <div id="selectVideoTwibbon" class="cursor-pointer border-2 border-transparent hover:border-gold rounded-xl p-2 transition-all group text-center bg-gray-50 flex-1 max-w-[160px]">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden relative shadow-sm flex items-center justify-center mb-3 mx-auto">
-                                <img id="previewVideoTwibbon" crossorigin="anonymous" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" class="w-full h-full object-contain" alt="Twibbon Video">
+                        <div id="selectVideoTwibbon" class="cursor-pointer rounded-2xl p-3 transition-all duration-300 group text-center bg-white border border-slate-200 hover:border-gold hover:shadow-glow flex-1 max-w-[170px] hover:-translate-y-1">
+                            <div class="w-full aspect-square bg-slate-50 rounded-xl border border-slate-100 overflow-hidden relative shadow-inner flex items-center justify-center mb-4 mx-auto group-hover:scale-95 transition-transform duration-300">
+                                <img id="previewVideoTwibbon" crossorigin="anonymous" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" class="w-full h-full object-contain p-2" alt="Twibbon Video">
                             </div>
-                            <span class="text-sm font-bold text-navy group-hover:text-gold transition-colors block border border-gray-300 rounded py-1.5 bg-white">Untuk Video</span>
+                            <span class="text-sm font-semibold text-slate-700 group-hover:text-gold transition-colors block border border-slate-100 rounded-lg py-2 bg-slate-50 group-hover:bg-gold/10">Untuk Video</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- EDITOR SECTION (Tahap 1 & 2) -->
-                <div id="editorSection" class="hidden">
-                    <div class="flex items-center gap-3 mb-4 w-full">
-                        <button id="backToTemplatesBtn" class="text-gray-500 hover:text-navy hover:bg-gray-200 bg-gray-100 p-2 rounded-full transition-colors" title="Kembali">
+                <div id="editorSection" class="hidden relative z-10">
+                    <div class="flex items-center gap-3 mb-6 w-full">
+                        <button id="backToTemplatesBtn" class="text-slate-500 hover:text-navy hover:bg-slate-100 bg-white border border-slate-200 p-2 rounded-full transition-all hover:shadow-sm" title="Kembali">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
-                        <h3 class="text-navy font-bold text-lg">Langkah 2: Unggah Media</h3>
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-navy text-white font-bold text-sm">2</span>
+                            <h3 class="text-navy font-bold text-lg">Unggah Media</h3>
+                        </div>
                     </div>
 
                     <!-- Upload Section -->
-                    <div class="mb-6">
-                        <label id="uploadLabel" for="mediaUpload" class="block w-full cursor-pointer bg-surface border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gold transition-colors group">
-                            <div class="mb-3">
-                                <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <div class="mb-8">
+                        <label id="uploadLabel" for="mediaUpload" class="block w-full cursor-pointer bg-slate-50/50 border-2 border-dashed border-slate-300 rounded-2xl p-10 text-center hover:border-gold hover:bg-gold/5 transition-all duration-300 group">
+                            <div class="mb-4 relative">
+                                <div class="absolute inset-0 bg-gold/20 rounded-full blur-xl group-hover:scale-110 transition-transform"></div>
+                                <svg class="mx-auto h-14 w-14 text-slate-400 group-hover:text-gold transition-colors relative z-10 animate-float" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                 </svg>
                             </div>
-                            <span id="uploadHintText" class="text-navy font-medium block mb-1">Klik untuk memilih file</span>
-                            <span id="uploadHintSubtext" class="text-xs text-gray-500">Pilih file yang sesuai</span>
+                            <span id="uploadHintText" class="text-navy font-bold block mb-1 text-lg">Klik untuk memilih file</span>
+                            <span id="uploadHintSubtext" class="text-sm text-slate-500">Pilih file yang sesuai dari perangkat Anda</span>
                             <input type="file" id="mediaUpload" class="hidden">
                         </label>
                     </div>
 
                     <!-- Preview Section -->
-                    <div id="previewContainer" class="hidden mb-6 flex flex-col items-center">
-                        <h3 class="text-navy font-semibold mb-3 w-full text-left">Pratinjau & Sesuaikan Posisi:</h3>
+                    <div id="previewContainer" class="hidden mb-8 flex flex-col items-center w-full max-w-sm mx-auto">
+                        <div class="w-full mb-3 px-1 text-center">
+                            <h3 class="text-navy font-bold text-lg">Pratinjau & Sesuaikan</h3>
+                        </div>
                         
                         <!-- Container menyesuaikan rasio asli twibbon -->
-                        <div id="interactiveArea" class="relative w-full max-w-sm rounded-xl overflow-hidden shadow-md bg-gray-200 flex items-center justify-center">
+                        <div id="interactiveArea" class="relative w-full rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-slate-200 flex items-center justify-center cursor-grab active:cursor-grabbing group">
                             <!-- For Image Preview -->
-                            <img id="imagePreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="Preview Foto">
+                            <img id="imagePreview" class="absolute inset-0 w-full h-full object-cover hidden transition-transform duration-75" alt="Preview Foto">
                             
                             <!-- For Video Preview -->
-                            <video id="videoPreview" class="absolute inset-0 w-full h-full object-cover hidden" playsinline muted loop></video>
+                            <video id="videoPreview" class="absolute inset-0 w-full h-full object-cover hidden transition-transform duration-75" playsinline muted loop></video>
                             
                             <!-- Twibbon Overlay -->
-                            <img id="twibbonOverlay" crossorigin="anonymous" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" class="relative z-10 w-full h-auto block pointer-events-none" alt="Twibbon Overlay" onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
+                            <img id="twibbonOverlay" crossorigin="anonymous" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" class="relative z-10 w-full h-auto block pointer-events-none drop-shadow-md" alt="Twibbon Overlay" onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
+                            
+                            <div class="absolute inset-0 border-2 border-transparent group-hover:border-gold/50 rounded-xl pointer-events-none transition-colors"></div>
                         </div>
 
                         <!-- Zoom Controls -->
-                        <div class="w-full max-w-sm mt-4 flex items-center gap-3">
-                            <svg class="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg>
-                            <input type="range" id="zoomSlider" min="0.1" max="3" step="0.05" value="1" class="w-full accent-gold">
-                            <svg class="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                        <div class="w-full mt-5 bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex items-center gap-3">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg>
+                            <input type="range" id="zoomSlider" min="0.1" max="3" step="0.05" value="1" class="w-full accent-gold cursor-pointer">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2 text-center">💡 <b>Tips:</b> Anda bisa langsung <b>menggeser (drag)</b> foto/video di dalam bingkai, mencubit layar untuk zoom (di HP).</p>
+                        <p class="text-[11px] text-slate-500 mt-3 text-center">💡 Bisa langsung <b>menggeser (drag)</b> foto di dalam bingkai, atau <b>cubit layar (pinch)</b> untuk zoom di HP.</p>
                     </div>
 
                     <!-- Action & Progress -->
-                    <div id="actionContainer" class="hidden flex-col items-center gap-4">
-                        <button id="processBtn" class="w-full md:w-auto px-8 py-3 bg-navy hover:bg-navy-hover text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border border-gray-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            Lihat Hasil (Preview)
+                    <div id="actionContainer" class="hidden flex-col items-center gap-4 mt-6">
+                        <button id="processBtn" class="w-full md:w-auto px-8 py-3.5 bg-gradient-to-r from-navy to-navy-light hover:from-navy-hover hover:to-navy text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 group">
+                            <svg class="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            Proses & Lihat Hasil
                         </button>
 
-                        <div id="progressContainer" class="w-full hidden mt-2">
-                            <div class="flex justify-between text-xs font-semibold text-navy mb-1">
-                                <span>Status:</span>
-                                <span id="progressText">0%</span>
+                        <div id="progressContainer" class="w-full max-w-sm hidden mt-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="flex justify-between text-xs font-bold text-navy mb-2">
+                                <span>Status Proses:</span>
+                                <span id="progressText" class="text-gold">0%</span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                <div id="progressBar" class="bg-gold h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden mb-2">
+                                <div id="progressBar" class="bg-gradient-to-r from-gold to-gold-light h-2 rounded-full transition-all duration-300 relative" style="width: 0%">
+                                    <div class="absolute inset-0 bg-white/20 w-full animate-pulse"></div>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-2 text-center" id="progressNote">Mohon tunggu, sedang memproses media...</p>
+                            <p class="text-[11px] text-slate-500 text-center" id="progressNote">Mohon tunggu sebentar, jangan tutup halaman ini...</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- RESULT SECTION (Tahap 3) -->
-                <div id="resultSection" class="hidden mb-6 flex-col items-center w-full max-w-sm mx-auto">
-                    <h3 class="text-navy font-semibold mb-3 w-full text-center text-xl">🎉 Hasil Twibbon Anda</h3>
+                <div id="resultSection" class="hidden flex-col items-center w-full max-w-sm mx-auto relative z-10 animate-fade-in">
+                    <div class="flex items-center gap-3 mb-6 w-full justify-center">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-navy text-white font-bold text-sm">3</span>
+                        <h3 class="text-navy font-extrabold text-xl md:text-2xl">Hasil Twibbon Anda</h3>
+                    </div>
                     
-                    <div class="w-full rounded-xl overflow-hidden shadow-xl bg-gray-200 mb-6 relative border-4 border-gold">
-                        <img id="finalImagePreview" class="w-full h-auto hidden" alt="Hasil Twibbon">
+                    <div class="w-full rounded-2xl overflow-hidden shadow-2xl bg-slate-100 mb-8 relative border-[6px] border-white ring-1 ring-slate-200 group">
+                        <img id="finalImagePreview" class="w-full h-auto hidden transition-transform duration-500 group-hover:scale-[1.02]" alt="Hasil Twibbon">
                         <video id="finalVideoPreview" class="w-full h-auto hidden" controls playsinline></video>
                     </div>
 
-                    <div class="w-full mb-4">
-                        <label for="participantName" class="block text-sm font-semibold text-navy mb-1">Nama Panggilan <span class="text-red-500">*</span></label>
-                        <input type="text" id="participantName" placeholder="Ketik nama panggilanmu di sini..." class="w-full text-sm px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-gold" required>
-                        <p class="text-xs text-gray-500 mt-1">Nama ini otomatis ditampilkan di Galeri Publik OSI 2026.</p>
+                    <div class="w-full mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <label for="participantName" class="block text-sm font-bold text-navy mb-2">Nama Panggilan <span class="text-red-500">*</span></label>
+                        <input type="text" id="participantName" placeholder="Ketik nama panggilanmu..." class="w-full text-sm px-4 py-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all shadow-sm" required>
+                        <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Otomatis tampil di Galeri OSI 2026.
+                        </p>
                     </div>
 
-                    <div class="flex flex-col md:flex-row gap-3 w-full">
-                        <button id="retryBtn" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
-                            Edit Kembali
-                        </button>
-                        
-                        <button id="downloadPublishBtn" class="flex-1 px-4 py-3 bg-gold hover:bg-gold-hover text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border border-yellow-500">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Unduh & Masuk Galeri
-                        </button>
-                    </div>
-
-                    <div id="uploadProgressContainer" class="w-full hidden mt-4">
-                        <p class="text-sm font-semibold text-navy text-center mb-1" id="uploadProgressText">Mengunggah ke Galeri...</p>
-                        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                            <div class="bg-gold h-2 rounded-full w-full animate-pulse"></div>
+                    <!-- Action & Progress -->
+                    <div id="resultActions" class="w-full flex flex-col gap-3">
+                        <div class="flex gap-3">
+                            <button id="retryBtn" class="flex-1 py-3 px-4 rounded-xl font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                Edit Ulang
+                            </button>
+                            <button id="downloadPublishBtn" class="flex-[1.5] py-3 px-4 rounded-xl font-bold text-navy-light bg-gold hover:bg-gold-light transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Unduh & Galeri
+                            </button>
                         </div>
+                        
+                        <div id="uploadProgressContainer" class="hidden mt-2 p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>
+                        </div>
+                    </div>
+
+                    <!-- Success State (Hidden by default) -->
+                    <div id="successStateContainer" class="hidden w-full flex-col items-center gap-4 mt-2">
+                        <div class="bg-green-50 text-green-700 w-full p-4 rounded-xl border border-green-200 text-center">
+                            <svg class="w-8 h-8 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <p class="font-bold text-green-800">Selesai!</p>
+                            <p class="text-sm">Twibbon berhasil diunduh dan dipublikasikan ke Galeri.</p>
+                        </div>
+                        <button onclick="location.reload()" class="w-full py-3 px-4 rounded-xl font-bold text-white bg-navy hover:bg-navy-light transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                            Kembali ke Halaman Utama
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- KOLOM KANAN: GALERI PUBLIK -->
-            <div class="lg:col-span-7 bg-white rounded-2xl shadow-lg p-6 md:p-8">
-                <div class="text-center mb-6">
-                    <h3 class="text-2xl font-bold text-navy mb-1">Galeri OSI 2026</h3>
-                    <p class="text-xs text-gray-500">Dukungan dari Mahasiswa Baru Universitas Sunan Gresik</p>
+            <div class="lg:col-span-7 bg-white/90 backdrop-blur-md border border-white/40 rounded-[2rem] shadow-soft p-6 md:p-10">
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-navy mb-2 tracking-tight">Galeri OSI 2026</h3>
+                    <p class="text-slate-500 text-sm max-w-md mx-auto">Kumpulan dukungan dari Mahasiswa Baru Universitas Sunan Gresik</p>
                 </div>
                 
-                <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-                    <p class="text-gray-500 text-sm col-span-full text-center py-8">Memuat galeri...</p>
+                <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
+                    <p class="text-slate-500 text-sm col-span-full text-center py-12 flex flex-col items-center gap-3">
+                        <svg class="w-8 h-8 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Memuat galeri...
+                    </p>
                 </div>
             </div>
         </div>
     </main>
     
-    <footer class="bg-navy py-4 text-center mt-auto border-t border-navy-hover">
-        <p class="text-xs text-gray-400">&copy; 2026 HIMASI × OSI Universitas Sunan Gresik. All rights reserved.</p>
+    <footer class="bg-navy-light py-6 text-center mt-auto border-t border-navy/20 relative z-10">
+        <p class="text-sm text-slate-300 font-medium">&copy; 2026 HIMASI × OSI Universitas Sunan Gresik</p>
+        <p class="text-xs text-slate-400 mt-1">All rights reserved.</p>
     </footer>
 
     <script type="module">
@@ -318,7 +374,7 @@
                     querySnapshot.forEach((docSnap) => {
                         const data = docSnap.data();
                         const div = document.createElement('div');
-                        div.className = "rounded-lg overflow-hidden border border-gray-200 aspect-square shadow-sm hover:shadow-md transition-shadow relative group";
+                        div.className = "rounded-2xl overflow-hidden border-4 border-white aspect-square shadow-sm hover:shadow-xl transition-all duration-300 relative group hover:-translate-y-2 cursor-pointer bg-slate-100";
                         
                         let optimizedUrl = data.url;
                         let playIcon = '';
@@ -328,21 +384,19 @@
                             // Cloudinary: Get .jpg thumbnail of the video
                             let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
                             optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_400,q_auto,f_auto/') + '.jpg';
-                            playIcon = '<div class="absolute inset-0 flex items-center justify-center"><div class="bg-black/50 rounded-full p-2"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
+                            playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
                             clickAction = `onclick="window.open('${data.url}', '_blank')"`;
-                            div.style.cursor = 'pointer';
                         } else {
                             optimizedUrl = data.url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
                             clickAction = `onclick="window.open('${data.url}', '_blank')"`;
-                            div.style.cursor = 'pointer';
                         }
                         
                         div.innerHTML = `
-                            <div ${clickAction} class="w-full h-full relative">
-                                <img src="${optimizedUrl}" class="w-full h-full object-cover" alt="Peserta">
+                            <div ${clickAction} class="w-full h-full relative block">
+                                <img src="${optimizedUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
                                 ${playIcon}
-                                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
-                                    <p class="text-white text-xs font-semibold truncate text-center">${data.participantName || 'Peserta OSI'}</p>
+                                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${data.participantName || 'Peserta OSI'}</p>
                                 </div>
                             </div>
                         `;
@@ -585,34 +639,46 @@
             progressContainer.classList.add('hidden');
         }
 
+        // Gunakan satu offscreen canvas secara global agar tidak terjadi memory leak saat merender video frame-by-frame
+        const globalOffCanvas = document.createElement('canvas');
+        const globalOffCtx = globalOffCanvas.getContext('2d');
+
         function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
             const mediaWidth = isVideo ? media.videoWidth : media.naturalWidth;
             const mediaHeight = isVideo ? media.videoHeight : media.naturalHeight;
             
             if (!mediaWidth || !mediaHeight) return;
 
-            // Hitung skala object-cover bawaan
+            // Pastikan ukuran offscreen canvas sesuai
+            if (globalOffCanvas.width !== canvasWidth || globalOffCanvas.height !== canvasHeight) {
+                globalOffCanvas.width = canvasWidth;
+                globalOffCanvas.height = canvasHeight;
+            }
+
+            // Bersihkan offscreen canvas sebelum menggambar
+            globalOffCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+
             const scaleCover = Math.max(canvasWidth / mediaWidth, canvasHeight / mediaHeight);
             const defaultW = mediaWidth * scaleCover;
             const defaultH = mediaHeight * scaleCover;
             const defaultX = (canvasWidth - defaultW) / 2;
             const defaultY = (canvasHeight - defaultH) / 2;
             
-            // Konversi nilai pergeseran dari koordinat UI HTML ke koordinat Canvas resolusi tinggi
+            globalOffCtx.drawImage(media, defaultX, defaultY, defaultW, defaultH);
+
+            // 2. Terapkan pan & zoom ke offscreen canvas (yang sudah ter-crop) ke main canvas
             const previewRect = interactiveArea.getBoundingClientRect();
             const ratioX = canvasWidth / previewRect.width;
             const ratioY = canvasHeight / previewRect.height;
             
             ctx.save();
             
-            // Pindahkan titik pusat untuk zoom dan geser
-            ctx.translate(canvasWidth / 2, canvasHeight / 2); // Titik pusat skala
-            ctx.translate(panX * ratioX, panY * ratioY);      // Pergeseran kursor
-            ctx.scale(userScale, userScale);                  // Zoom
-            ctx.translate(-canvasWidth / 2, -canvasHeight / 2); // Kembalikan titik acuan ke kiri atas
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.translate(panX * ratioX, panY * ratioY);
+            ctx.scale(userScale, userScale);
+            ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
             
-            // Gambar media
-            ctx.drawImage(media, defaultX, defaultY, defaultW, defaultH);
+            ctx.drawImage(globalOffCanvas, 0, 0);
             
             ctx.restore();
         }
@@ -646,6 +712,17 @@
                 canvas.width = twibbonWidth;
                 canvas.height = twibbonHeight;
 
+                // Optimasi Khusus Video: Turunkan resolusi maksimal ke 720p (Standar HD Sosmed)
+                // Mengurangi beban rendering CPU hingga 60% agar browser tidak nge-lag/crash
+                if (mediaType === 'video') {
+                    const maxVideoDim = 720;
+                    if (canvas.width > maxVideoDim || canvas.height > maxVideoDim) {
+                        const scale = Math.min(maxVideoDim / canvas.width, maxVideoDim / canvas.height);
+                        canvas.width = Math.floor(canvas.width * scale);
+                        canvas.height = Math.floor(canvas.height * scale);
+                    }
+                }
+
                 if (mediaType === 'image') {
                     progressText.innerText = 'Merender Foto Resolusi Tinggi...';
                     progressBar.style.width = '50%';
@@ -657,6 +734,10 @@
                         });
                     }
 
+                    // Beri warna dasar putih agar jika ada bagian transparan tidak menjadi hitam di JPEG
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
                     drawCover(ctx, imagePreview, canvas.width, canvas.height, false);
                     if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
                         ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
@@ -664,32 +745,51 @@
 
                     progressBar.style.width = '100%';
                     
+                    // Gunakan JPEG dengan kualitas 90% agar ukuran file jauh lebih kecil (< 10MB)
                     canvas.toBlob((blob) => {
                         finalMediaBlob = blob;
-                        finalMediaExt = 'png';
+                        finalMediaExt = 'jpg';
                         showResultPreview(URL.createObjectURL(blob), 'image');
-                    }, 'image/png');
+                    }, 'image/jpeg', 0.90);
 
                 } else if (mediaType === 'video') {
-                    progressText.innerText = 'Merender Video (1080p)...';
+                    progressText.innerText = 'Merender Video HD (720p)...';
                     progressNote.innerText = "Proses rendering video HD memakan waktu lebih lama. Mohon tetap buka layar ini.";
+
+                    // Unmute video agar audio track bisa ditangkap oleh browser
+                    videoPreview.muted = false;
+                    videoPreview.currentTime = 0;
+                    videoPreview.loop = false;
+                    
+                    await videoPreview.play().catch(err => {
+                        throw new Error('Gagal memutar video untuk direkam.');
+                    });
 
                     const stream = canvas.captureStream(30);
                     
-                    let mimeType = 'video/webm;codecs=vp9';
-                    if (MediaRecorder.isTypeSupported('video/mp4')) {
+                    // Ambil audio dari video asli dan gabungkan ke stream Canvas
+                    try {
+                        const audioStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
+                        if (audioStream) {
+                            const audioTracks = audioStream.getAudioTracks();
+                            if (audioTracks.length > 0) {
+                                stream.addTrack(audioTracks[0]);
+                            }
+                        }
+                    } catch (err) {
+                        console.warn("Gagal menambahkan audio:", err);
+                    }
+                    
+                    let mimeType = 'video/webm';
+                    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                        mimeType = 'video/webm;codecs=vp9';
+                    } else if (MediaRecorder.isTypeSupported('video/mp4')) {
                         mimeType = 'video/mp4';
-                    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
-                        mimeType = 'video/webm;codecs=h264';
-                    } else if (!MediaRecorder.isTypeSupported('video/webm')) {
-                        throw new Error("Browser Anda tidak mendukung perekaman video.");
-                    } else {
-                        mimeType = 'video/webm';
                     }
 
                     let mediaRecorder;
                     try {
-                        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 4000000 });
                     } catch (e) {
                         mediaRecorder = new MediaRecorder(stream);
                     }
@@ -709,33 +809,18 @@
                             alert('Gagal memproses file video akhir.');
                             resetUI();
                         } finally {
-                            videoPreview.loop = true;
-                            videoPreview.play().catch(() => {});
+                            videoPreview.muted = true; // Bisukan kembali video sumber
+                            videoPreview.pause();
                         }
                     };
 
-                    videoPreview.pause();
-                    videoPreview.currentTime = 0;
-                    videoPreview.loop = false; 
-                    
-                    await new Promise(resolve => {
-                        const onSeeked = () => {
-                            videoPreview.removeEventListener('seeked', onSeeked);
-                            resolve();
-                        };
-                        videoPreview.addEventListener('seeked', onSeeked);
-                        if(videoPreview.currentTime === 0) resolve();
-                    });
-
                     mediaRecorder.start(100); 
-                    await videoPreview.play().catch(err => {
-                        mediaRecorder.stop();
-                        throw new Error('Gagal memutar video untuk direkam.');
-                    });
 
                     const duration = videoPreview.duration || 1;
+                    let lastDrawTime = 0;
+                    const frameInterval = 1000 / 30; // Batasi 30 FPS agar tidak berat
 
-                    const drawFrame = () => {
+                    const drawFrame = (timestamp) => {
                         if (videoPreview.paused || videoPreview.ended) {
                             if (mediaRecorder.state === 'recording') {
                                 mediaRecorder.stop();
@@ -743,20 +828,28 @@
                             return;
                         }
 
-                        drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
-                        if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
-                            ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-                        }
+                        // Hanya gambar jika sudah waktunya (throttle FPS)
+                        if (timestamp - lastDrawTime >= frameInterval) {
+                            lastDrawTime = timestamp;
 
-                        const current = videoPreview.currentTime;
-                        const percent = Math.min((current / duration) * 100, 100).toFixed(1);
-                        progressBar.style.width = `${percent}%`;
-                        progressText.innerText = `Memproses Video HD: ${percent}%`;
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                            drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
+                            if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
+                                ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
+                            }
+
+                            const current = videoPreview.currentTime;
+                            const percent = Math.min((current / duration) * 100, 100).toFixed(1);
+                            progressBar.style.width = `${percent}%`;
+                            progressText.innerText = `Memproses Video HD: ${percent}%`;
+                        }
 
                         requestAnimationFrame(drawFrame);
                     };
 
-                    drawFrame();
+                    requestAnimationFrame(drawFrame);
                 }
             } catch (error) {
                 console.error(error);
@@ -863,7 +956,7 @@
                 });
                 const cloudData = await res.json();
                 
-                if (cloudData.secure_url) {
+                if (res.ok && cloudData.secure_url) {
                     await addDoc(collection(db, "gallery"), {
                         url: cloudData.secure_url,
                         participantName: nameValue,
@@ -871,16 +964,21 @@
                         createdAt: new Date()
                     });
                     initApp(); // refresh gallery
-                    alert("Yey! Twibbon berhasil diunduh dan masuk ke Galeri OSI 2026! 🎉");
                     
-                    // Reset semuanya ke awal
-                    location.reload();
+                    // Sembunyikan progress & tombol aksi lama
+                    uploadProgressContainer.classList.add('hidden');
+                    document.getElementById('resultActions').classList.add('hidden');
+                    // Tampilkan status sukses
+                    document.getElementById('successStateContainer').classList.remove('hidden');
+                    document.getElementById('successStateContainer').classList.add('flex');
+                    
                 } else {
-                    throw new Error("Gagal mendapatkan URL dari Cloudinary");
+                    console.error("Cloudinary Error Data:", cloudData);
+                    throw new Error(cloudData.error ? cloudData.error.message : "Gagal mendapatkan URL dari Cloudinary");
                 }
             } catch (err) {
                 console.error("Gagal mengunggah ke galeri:", err);
-                alert("Twibbon berhasil diunduh, namun gagal diupload ke Galeri Publik karena masalah jaringan.");
+                alert("Gagal diupload ke Galeri: " + err.message);
                 downloadPublishBtn.disabled = false;
                 retryBtn.disabled = false;
                 downloadPublishBtn.classList.remove('opacity-50', 'cursor-not-allowed');
