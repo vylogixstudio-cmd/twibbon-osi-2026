@@ -105,7 +105,6 @@
                         <button id="saveLogoTextBtn" class="w-full bg-navy hover:bg-navy-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Logo Teks</button>
                     </div>
 
-                    <p id="templateStatus" class="text-sm mt-2 font-medium text-center w-full"></p>
                 </div>
             </div>
 
@@ -231,9 +230,24 @@
             }
         }
 
-        async function handleAssetUpload(fileInputId, previewId, btnId, fieldName) {
+        // Preview Lokal Sebelum Upload
+        function handleLocalPreview(inputId, previewId) {
+            document.getElementById(inputId).addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    document.getElementById(previewId).src = url;
+                }
+            });
+        }
+        
+        handleLocalPreview('templateUpload', 'currentTemplatePreview');
+        handleLocalPreview('logoLeftUpload', 'currentLogoLeft');
+        handleLocalPreview('logoRightUpload', 'currentLogoRight');
+        handleLocalPreview('logoTextUpload', 'currentLogoText');
+
+        async function handleAssetUpload(fileInputId, btnId, fieldName) {
             const fileInput = document.getElementById(fileInputId);
-            const preview = document.getElementById(previewId);
             const btn = document.getElementById(btnId);
             const file = fileInput.files[0];
             
@@ -242,12 +256,10 @@
                 return;
             }
 
+            const originalText = btn.innerText;
             try {
-                const originalText = btn.innerText;
                 btn.disabled = true;
                 btn.innerText = "Mengupload...";
-                templateStatus.innerText = "Sedang mengunggah ke Cloudinary...";
-                templateStatus.className = "text-sm mt-2 font-medium text-blue-500 w-full text-center";
 
                 const formData = new FormData();
                 formData.append('file', file);
@@ -260,34 +272,29 @@
                 const data = await response.json();
                 
                 if (data.secure_url) {
-                    templateStatus.innerText = "Menyimpan pengaturan...";
-                    // Save to Firestore using merge: true to keep other settings
                     await setDoc(doc(db, "settings", "twibbon"), {
                         [fieldName]: data.secure_url,
                         updatedAt: new Date()
                     }, { merge: true });
                     
-                    templateStatus.innerText = "Berhasil! Aset telah diperbarui.";
-                    templateStatus.className = "text-sm mt-2 font-medium text-green-500 w-full text-center";
-                    preview.src = data.secure_url;
-                    fileInput.value = "";
+                    alert("Berhasil! Aset telah diperbarui untuk semua orang.");
                 } else {
                     throw new Error("Gagal mendapatkan URL gambar dari Cloudinary");
                 }
             } catch (error) {
                 console.error(error);
-                templateStatus.innerText = "Gagal mengunggah aset: " + error.message;
-                templateStatus.className = "text-sm mt-2 font-medium text-red-500 w-full text-center";
+                alert("Gagal mengunggah aset: " + error.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = originalText;
+                // fileInput.value = ""; // opsional: biarkan saja terisi atau kosongkan
             }
         }
 
-        document.getElementById('saveTemplateBtn').addEventListener('click', () => handleAssetUpload('templateUpload', 'currentTemplatePreview', 'saveTemplateBtn', 'url'));
-        document.getElementById('saveLogoLeftBtn').addEventListener('click', () => handleAssetUpload('logoLeftUpload', 'currentLogoLeft', 'saveLogoLeftBtn', 'logoLeftUrl'));
-        document.getElementById('saveLogoRightBtn').addEventListener('click', () => handleAssetUpload('logoRightUpload', 'currentLogoRight', 'saveLogoRightBtn', 'logoRightUrl'));
-        document.getElementById('saveLogoTextBtn').addEventListener('click', () => handleAssetUpload('logoTextUpload', 'currentLogoText', 'saveLogoTextBtn', 'logoTextUrl'));
+        document.getElementById('saveTemplateBtn').addEventListener('click', () => handleAssetUpload('templateUpload', 'saveTemplateBtn', 'url'));
+        document.getElementById('saveLogoLeftBtn').addEventListener('click', () => handleAssetUpload('logoLeftUpload', 'saveLogoLeftBtn', 'logoLeftUrl'));
+        document.getElementById('saveLogoRightBtn').addEventListener('click', () => handleAssetUpload('logoRightUpload', 'saveLogoRightBtn', 'logoRightUrl'));
+        document.getElementById('saveLogoTextBtn').addEventListener('click', () => handleAssetUpload('logoTextUpload', 'saveLogoTextBtn', 'logoTextUrl'));
 
         // --- Gallery Management ---
         async function loadGallery() {
