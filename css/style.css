@@ -1,0 +1,23 @@
+/* ========================================
+   Twibbon OSI 2026 - Shared Styles
+   ======================================== */
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Index Page: Upload label disabled state */
+.disabled-label {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Index Page: Interactive editor area (pan & zoom) */
+#interactiveArea {
+    touch-action: none;
+    cursor: grab;
+}
+
+#interactiveArea:active {
+    cursor: grabbing;
+}
