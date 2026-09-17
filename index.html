@@ -75,17 +75,35 @@
                     <p class="text-gray-600 text-sm">Unggah Foto atau Video Anda (Maksimal 1 Menit). Hasil akan dirender dalam kualitas resolusi tinggi (HD).</p>
                 </div>
 
-                <!-- Tampilkan Mentahan Twibbon -->
-                <div class="mb-6 flex flex-col items-center">
-                    <h3 class="text-navy font-semibold mb-2 text-sm">Desain Twibbon Aktif:</h3>
-                    <div class="w-32 h-32 md:w-40 md:h-40 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden relative shadow-inner flex items-center justify-center">
-                        <img id="rawTwibbon" src="twibbon.png" class="w-full h-full object-contain" alt="Mentahan Twibbon" onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; document.getElementById('rawTwibbonError').classList.remove('hidden');">
-                        <span id="rawTwibbonError" class="absolute text-xs text-red-500 hidden text-center px-2">twibbon.png belum ada di folder</span>
+                <!-- PILIH TEMPLATE -->
+                <div id="templateSelectionSection" class="mb-8 flex flex-col items-center border-b border-gray-200 pb-8">
+                    <h3 class="text-navy font-bold mb-4 text-lg">Langkah 1: Pilih Twibbon</h3>
+                    <div class="flex gap-4 w-full justify-center">
+                        <!-- Pilihan Foto -->
+                        <div id="selectPhotoTwibbon" class="cursor-pointer border-2 border-transparent hover:border-gold rounded-xl p-2 transition-all group text-center bg-gray-50 flex-1 max-w-[160px]">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden relative shadow-sm flex items-center justify-center mb-3 mx-auto">
+                                <img id="previewPhotoTwibbon" src="twibbon.png" class="w-full h-full object-contain" alt="Twibbon Foto" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='">
+                            </div>
+                            <span class="text-sm font-bold text-navy group-hover:text-gold transition-colors block border border-gray-300 rounded py-1.5 bg-white">Untuk Foto</span>
+                        </div>
+                        
+                        <!-- Pilihan Video -->
+                        <div id="selectVideoTwibbon" class="cursor-pointer border-2 border-transparent hover:border-gold rounded-xl p-2 transition-all group text-center bg-gray-50 flex-1 max-w-[160px]">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden relative shadow-sm flex items-center justify-center mb-3 mx-auto">
+                                <img id="previewVideoTwibbon" src="twibbon_video.png" class="w-full h-full object-contain" alt="Twibbon Video" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='">
+                            </div>
+                            <span class="text-sm font-bold text-navy group-hover:text-gold transition-colors block border border-gray-300 rounded py-1.5 bg-white">Untuk Video</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- EDITOR SECTION (Tahap 1 & 2) -->
-                <div id="editorSection">
+                <div id="editorSection" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-navy font-bold text-lg">Langkah 2: Unggah Media</h3>
+                        <button id="backToTemplatesBtn" class="text-xs text-blue-600 font-semibold hover:underline bg-blue-50 px-3 py-1.5 rounded-md">Ganti Pilihan</button>
+                    </div>
+
                     <!-- Upload Section -->
                     <div class="mb-6">
                         <label id="uploadLabel" for="mediaUpload" class="block w-full cursor-pointer bg-surface border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gold transition-colors group">
@@ -94,8 +112,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <span class="text-navy font-medium block mb-1">Klik untuk memilih Foto / Video</span>
-                            <span class="text-xs text-gray-500">JPG, PNG, MP4, WEBM (Durasi Max. 1 Menit)</span>
+                            <span id="uploadHintText" class="text-navy font-medium block mb-1">Klik untuk memilih file</span>
+                            <span id="uploadHintSubtext" class="text-xs text-gray-500">Pilih file yang sesuai</span>
                             <input type="file" id="mediaUpload" class="hidden">
                         </label>
                     </div>
@@ -267,11 +285,11 @@
                     const data = docSnap.data();
                     if (data.twibbonPhotoUrl || data.url) {
                         globalTwibbonPhotoUrl = data.twibbonPhotoUrl || data.url;
-                        twibbonOverlay.src = globalTwibbonPhotoUrl;
-                        document.getElementById('rawTwibbon').src = globalTwibbonPhotoUrl;
+                        document.getElementById('previewPhotoTwibbon').src = globalTwibbonPhotoUrl;
                     }
                     if (data.twibbonVideoUrl) {
                         globalTwibbonVideoUrl = data.twibbonVideoUrl;
+                        document.getElementById('previewVideoTwibbon').src = globalTwibbonVideoUrl;
                     }
                     if (data.logoLeftUrl) document.getElementById('displayLogoLeft').src = data.logoLeftUrl;
                     if (data.logoRightUrl) document.getElementById('displayLogoRight').src = data.logoRightUrl;
@@ -423,6 +441,53 @@
             updateTransformUI();
         }, { passive: false });
         // ------------------------------------- //
+        // Navigation: Template Selection to Editor
+        // ------------------------------------- //
+        const templateSelectionSection = document.getElementById('templateSelectionSection');
+        const selectPhotoTwibbon = document.getElementById('selectPhotoTwibbon');
+        const selectVideoTwibbon = document.getElementById('selectVideoTwibbon');
+        const backToTemplatesBtn = document.getElementById('backToTemplatesBtn');
+        const uploadHintText = document.getElementById('uploadHintText');
+        const uploadHintSubtext = document.getElementById('uploadHintSubtext');
+
+        let selectedTemplateMode = 'photo'; // default
+
+        function switchToEditor(mode) {
+            selectedTemplateMode = mode;
+            templateSelectionSection.classList.add('hidden');
+            editorSection.classList.remove('hidden');
+
+            if (mode === 'photo') {
+                twibbonOverlay.src = globalTwibbonPhotoUrl;
+                // fileInput.accept = "image/*"; // Removed accept due to Xiaomi bug
+                uploadHintText.innerText = "Klik untuk memilih Foto";
+                uploadHintSubtext.innerText = "JPG, PNG (Maksimal 150 MB)";
+            } else {
+                twibbonOverlay.src = globalTwibbonVideoUrl;
+                // fileInput.accept = "video/*"; // Removed accept due to Xiaomi bug
+                uploadHintText.innerText = "Klik untuk memilih Video";
+                uploadHintSubtext.innerText = "MP4, WEBM (Durasi Max. 1 Menit)";
+            }
+            
+            // Clean up old state if switching modes
+            fileInput.value = "";
+            previewContainer.classList.add('hidden');
+            actionContainer.classList.add('hidden');
+            actionContainer.classList.remove('flex');
+            imagePreview.src = "";
+            videoPreview.removeAttribute('src');
+            currentMediaUrl = null;
+            mediaFile = null;
+        }
+
+        selectPhotoTwibbon.addEventListener('click', () => switchToEditor('photo'));
+        selectVideoTwibbon.addEventListener('click', () => switchToEditor('video'));
+
+        backToTemplatesBtn.addEventListener('click', () => {
+            editorSection.classList.add('hidden');
+            templateSelectionSection.classList.remove('hidden');
+        });
+        // ------------------------------------- //
 
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -431,6 +496,18 @@
             // Batas maksimal 150MB
             if (file.size > 150 * 1024 * 1024) {
                 alert('Waduh, ukuran filemu terlalu besar! Maksimal 150 MB ya. Coba kompres dulu.');
+                fileInput.value = "";
+                return;
+            }
+
+            // Validasi mode vs tipe file
+            if (selectedTemplateMode === 'photo' && !file.type.startsWith('image/')) {
+                alert('Kamu memilih mode Twibbon Foto, tapi file yang dipilih bukan foto. Silakan pilih foto, atau kembali dan pilih mode Video.');
+                fileInput.value = "";
+                return;
+            }
+            if (selectedTemplateMode === 'video' && !file.type.startsWith('video/')) {
+                alert('Kamu memilih mode Twibbon Video, tapi file yang dipilih bukan video. Silakan pilih video, atau kembali dan pilih mode Foto.');
                 fileInput.value = "";
                 return;
             }
@@ -466,11 +543,6 @@
                 videoPreview.src = currentMediaUrl;
                 videoPreview.classList.remove('hidden');
                 
-                videoPreview.onloadedmetadata = () => {
-                    if (videoPreview.duration > 61) {
-                        alert('Durasi video melebihi batas maksimal 1 menit (60 detik). Silakan pilih video yang lebih pendek.');
-                        fileInput.value = "";
-                        mediaFile = null;
                         previewContainer.classList.add('hidden');
                         actionContainer.classList.add('hidden');
                         return;
