@@ -503,22 +503,13 @@ function showResultPreview(url, type) {
         if (!box) {
             box = document.createElement('div');
             box.id = 'cssVideoPreviewBox';
-            box.className = 'w-full h-auto aspect-square overflow-hidden relative pointer-events-none mb-6 rounded-2xl shadow-xl';
+            box.className = 'w-full h-auto mb-6';
             finalVideoPreview.parentNode.insertBefore(box, finalVideoPreview.nextSibling);
         }
-        box.innerHTML = '';
-        const cloneContainer = interactiveArea.cloneNode(true);
-        cloneContainer.id = 'clonedPreviewContainer';
-        cloneContainer.classList.remove('hidden');
-        cloneContainer.style.width = '100%';
-        cloneContainer.style.height = '100%';
         
-        const clonedVideo = cloneContainer.querySelector('#videoPreview');
-        clonedVideo.src = videoPreview.src;
-        clonedVideo.style.transform = videoPreview.style.transform;
-        clonedVideo.play().catch(e=>console.log(e));
-        
-        box.appendChild(cloneContainer);
+        // Pindahkan element asli (TIDAK DI-CLONE)
+        box.appendChild(interactiveArea);
+        interactiveArea.classList.add('pointer-events-none');
     }
     resetUI();
 }
@@ -528,11 +519,16 @@ retryBtn.addEventListener('click', () => {
     if (finalVideoPreview.src) URL.revokeObjectURL(finalVideoPreview.src);
     finalMediaBlob = null;
     finalMediaExt = null;
+    
+    if (interactiveArea.parentNode && interactiveArea.parentNode.id === 'cssVideoPreviewBox') {
+        const zoomDiv = zoomSlider.parentNode;
+        zoomDiv.parentNode.insertBefore(interactiveArea, zoomDiv);
+        interactiveArea.classList.remove('pointer-events-none');
+    }
+    
     resultSection.classList.add('hidden');
     resultSection.classList.remove('flex');
     editorSection.classList.remove('hidden');
-    const box = document.getElementById('cssVideoPreviewBox');
-    if (box) box.innerHTML = '';
 });
 
 // ========================================
