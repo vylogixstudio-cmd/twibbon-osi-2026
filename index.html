@@ -274,6 +274,8 @@
         
         let globalTwibbonPhotoUrl = 'twibbon.png';
         let globalTwibbonVideoUrl = 'twibbon_video.png'; // fallback if not set
+        let globalLabelPhoto = 'Untuk Foto';
+        let globalLabelVideo = 'Untuk Video';
 
         // Initialize dynamic template & gallery
         async function initApp() {
@@ -291,6 +293,16 @@
                         globalTwibbonVideoUrl = data.twibbonVideoUrl;
                         document.getElementById('previewVideoTwibbon').src = globalTwibbonVideoUrl;
                     }
+                    
+                    if (data.labelPhoto) {
+                        globalLabelPhoto = data.labelPhoto;
+                        document.getElementById('selectPhotoTwibbon').querySelector('span').innerText = globalLabelPhoto;
+                    }
+                    if (data.labelVideo) {
+                        globalLabelVideo = data.labelVideo;
+                        document.getElementById('selectVideoTwibbon').querySelector('span').innerText = globalLabelVideo;
+                    }
+
                     if (data.logoLeftUrl) document.getElementById('displayLogoLeft').src = data.logoLeftUrl;
                     if (data.logoRightUrl) document.getElementById('displayLogoRight').src = data.logoRightUrl;
                     if (data.logoTextUrl) document.getElementById('displayLogoText').src = data.logoTextUrl;
@@ -460,12 +472,12 @@
             if (mode === 'photo') {
                 twibbonOverlay.src = globalTwibbonPhotoUrl;
                 // fileInput.accept = "image/*"; // Removed accept due to Xiaomi bug
-                uploadHintText.innerText = "Klik untuk memilih Foto";
+                uploadHintText.innerText = "Klik untuk memilih " + globalLabelPhoto;
                 uploadHintSubtext.innerText = "JPG, PNG (Maksimal 150 MB)";
             } else {
                 twibbonOverlay.src = globalTwibbonVideoUrl;
                 // fileInput.accept = "video/*"; // Removed accept due to Xiaomi bug
-                uploadHintText.innerText = "Klik untuk memilih Video";
+                uploadHintText.innerText = "Klik untuk memilih " + globalLabelVideo;
                 uploadHintSubtext.innerText = "MP4, WEBM (Durasi Max. 1 Menit)";
             }
             
@@ -502,12 +514,12 @@
 
             // Validasi mode vs tipe file
             if (selectedTemplateMode === 'photo' && !file.type.startsWith('image/')) {
-                alert('Kamu memilih mode Twibbon Foto, tapi file yang dipilih bukan foto. Silakan pilih foto, atau kembali dan pilih mode Video.');
+                alert(`Kamu memilih mode ${globalLabelPhoto}, tapi file yang dipilih bukan foto. Silakan pilih foto, atau kembali dan pilih mode lainnya.`);
                 fileInput.value = "";
                 return;
             }
             if (selectedTemplateMode === 'video' && !file.type.startsWith('video/')) {
-                alert('Kamu memilih mode Twibbon Video, tapi file yang dipilih bukan video. Silakan pilih video, atau kembali dan pilih mode Foto.');
+                alert(`Kamu memilih mode ${globalLabelVideo}, tapi file yang dipilih bukan video. Silakan pilih video, atau kembali dan pilih mode lainnya.`);
                 fileInput.value = "";
                 return;
             }
@@ -543,6 +555,11 @@
                 videoPreview.src = currentMediaUrl;
                 videoPreview.classList.remove('hidden');
                 
+                videoPreview.onloadedmetadata = () => {
+                    if (videoPreview.duration > 61) {
+                        alert('Durasi video melebihi batas maksimal 1 menit (60 detik). Silakan pilih video yang lebih pendek.');
+                        fileInput.value = "";
+                        mediaFile = null;
                         previewContainer.classList.add('hidden');
                         actionContainer.classList.add('hidden');
                         return;

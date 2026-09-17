@@ -105,13 +105,30 @@
                     </div>
 
                     <!-- LOGO TEKS (TENGAH) -->
-                    <div class="w-full">
+                    <div class="w-full border-b pb-4">
                         <p class="text-sm font-bold text-gray-800 mb-2">Logo Teks (Atas Judul):</p>
                         <div class="bg-gray-100 rounded-lg p-2 border border-gray-300 mb-2 h-12 flex justify-center">
                             <img id="currentLogoText" src="logo_osi_text.png" class="h-full object-contain rounded" alt="Logo Teks">
                         </div>
                         <input type="file" id="logoTextUpload" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 mb-2">
                         <button id="saveLogoTextBtn" class="w-full bg-navy hover:bg-navy-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Logo Teks</button>
+                    </div>
+
+                    <!-- PENGATURAN TEKS LABEL -->
+                    <div class="w-full">
+                        <p class="text-sm font-bold text-gray-800 mb-2">Teks Pilihan Template:</p>
+                        
+                        <div class="mb-3">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Label Foto</label>
+                            <input type="text" id="labelPhotoInput" class="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:border-gold" placeholder="Contoh: Untuk Foto" value="Untuk Foto">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Label Video</label>
+                            <input type="text" id="labelVideoInput" class="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:border-gold" placeholder="Contoh: Untuk Video" value="Untuk Video">
+                        </div>
+
+                        <button id="saveLabelsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Simpan Teks Label</button>
                     </div>
 
                 </div>
@@ -234,6 +251,9 @@
                     if (data.logoLeftUrl) document.getElementById('currentLogoLeft').src = data.logoLeftUrl;
                     if (data.logoRightUrl) document.getElementById('currentLogoRight').src = data.logoRightUrl;
                     if (data.logoTextUrl) document.getElementById('currentLogoText').src = data.logoTextUrl;
+                    
+                    if (data.labelPhoto) document.getElementById('labelPhotoInput').value = data.labelPhoto;
+                    if (data.labelVideo) document.getElementById('labelVideoInput').value = data.labelVideo;
                 }
             } catch (e) {
                 console.error("Gagal memuat template:", e);
@@ -306,6 +326,33 @@
         document.getElementById('saveLogoLeftBtn').addEventListener('click', () => handleAssetUpload('logoLeftUpload', 'saveLogoLeftBtn', 'logoLeftUrl'));
         document.getElementById('saveLogoRightBtn').addEventListener('click', () => handleAssetUpload('logoRightUpload', 'saveLogoRightBtn', 'logoRightUrl'));
         document.getElementById('saveLogoTextBtn').addEventListener('click', () => handleAssetUpload('logoTextUpload', 'saveLogoTextBtn', 'logoTextUrl'));
+
+        // Simpan Label Teks
+        document.getElementById('saveLabelsBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('saveLabelsBtn');
+            const originalText = btn.innerText;
+            const labelPhoto = document.getElementById('labelPhotoInput').value.trim() || 'Untuk Foto';
+            const labelVideo = document.getElementById('labelVideoInput').value.trim() || 'Untuk Video';
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "Menyimpan...";
+                
+                await setDoc(doc(db, "settings", "twibbon"), {
+                    labelPhoto: labelPhoto,
+                    labelVideo: labelVideo,
+                    updatedAt: new Date()
+                }, { merge: true });
+                
+                alert("Berhasil! Label pilihan template telah diperbarui.");
+            } catch (error) {
+                console.error(error);
+                alert("Gagal menyimpan label: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        });
 
         // --- Gallery Management ---
         async function loadGallery() {
