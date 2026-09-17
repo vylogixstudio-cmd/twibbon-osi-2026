@@ -62,21 +62,50 @@
             <!-- Pengaturan Template (Kiri) -->
             <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-md border-t-4 border-gold">
                 <h3 class="text-xl font-bold text-navy mb-4 flex items-center gap-2">
-                    🖼️ Pengaturan Template
+                    🖼️ Pengaturan Aset
                 </h3>
                 <div class="flex flex-col gap-6 items-start">
-                    <div class="w-full">
-                        <p class="text-sm font-semibold text-gray-600 mb-2">Template Saat Ini:</p>
-                        <div class="bg-gray-100 rounded-lg p-2 border-2 border-dashed border-gray-300">
-                            <img id="currentTemplatePreview" src="twibbon.png" class="w-full h-auto object-contain rounded" alt="Current Template">
+                    <!-- TWIBBON -->
+                    <div class="w-full border-b pb-4">
+                        <p class="text-sm font-bold text-gray-800 mb-2">Bingkai Twibbon (PNG):</p>
+                        <div class="bg-gray-100 rounded-lg p-2 border-2 border-dashed border-gray-300 mb-2 w-32 h-32 mx-auto">
+                            <img id="currentTemplatePreview" src="twibbon.png" class="w-full h-full object-contain rounded" alt="Current Template">
                         </div>
+                        <input type="file" id="templateUpload" accept="image/png" class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-yellow-50 file:text-gold hover:file:bg-yellow-100 mb-2">
+                        <button id="saveTemplateBtn" class="w-full bg-gold hover:bg-gold-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Bingkai</button>
                     </div>
+
+                    <!-- LOGO KIRI -->
+                    <div class="w-full border-b pb-4">
+                        <p class="text-sm font-bold text-gray-800 mb-2">Logo Kiri (HIMASI):</p>
+                        <div class="bg-gray-100 rounded-lg p-2 border border-gray-300 mb-2 w-16 h-16 mx-auto">
+                            <img id="currentLogoLeft" src="logo.png" class="w-full h-full object-contain rounded" alt="Logo Kiri">
+                        </div>
+                        <input type="file" id="logoLeftUpload" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 mb-2">
+                        <button id="saveLogoLeftBtn" class="w-full bg-navy hover:bg-navy-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Logo Kiri</button>
+                    </div>
+
+                    <!-- LOGO KANAN -->
+                    <div class="w-full border-b pb-4">
+                        <p class="text-sm font-bold text-gray-800 mb-2">Logo Kanan (OSI):</p>
+                        <div class="bg-gray-100 rounded-lg p-2 border border-gray-300 mb-2 w-16 h-16 mx-auto">
+                            <img id="currentLogoRight" src="logo_osi.png" class="w-full h-full object-contain rounded" alt="Logo Kanan">
+                        </div>
+                        <input type="file" id="logoRightUpload" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 mb-2">
+                        <button id="saveLogoRightBtn" class="w-full bg-navy hover:bg-navy-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Logo Kanan</button>
+                    </div>
+
+                    <!-- LOGO TEKS (TENGAH) -->
                     <div class="w-full">
-                        <p class="text-sm text-gray-600 mb-4">Upload file PNG transparan baru untuk mengganti bingkai Twibbon untuk semua pengguna.</p>
-                        <input type="file" id="templateUpload" accept="image/png" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-gold hover:file:bg-yellow-100 mb-4">
-                        <button id="saveTemplateBtn" class="w-full bg-gold hover:bg-gold-hover text-white font-semibold px-6 py-2 rounded-lg transition-colors disabled:opacity-50">Upload & Simpan</button>
-                        <p id="templateStatus" class="text-sm mt-2 font-medium text-center"></p>
+                        <p class="text-sm font-bold text-gray-800 mb-2">Logo Teks (Atas Judul):</p>
+                        <div class="bg-gray-100 rounded-lg p-2 border border-gray-300 mb-2 h-12 flex justify-center">
+                            <img id="currentLogoText" src="logo_osi_text.png" class="h-full object-contain rounded" alt="Logo Teks">
+                        </div>
+                        <input type="file" id="logoTextUpload" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 mb-2">
+                        <button id="saveLogoTextBtn" class="w-full bg-navy hover:bg-navy-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50">Ganti Logo Teks</button>
                     </div>
+
+                    <p id="templateStatus" class="text-sm mt-2 font-medium text-center w-full"></p>
                 </div>
             </div>
 
@@ -185,33 +214,41 @@
             signOut(auth);
         });
 
-        // --- Template Management ---
+        // --- Template & Asset Management ---
         async function loadCurrentTemplate() {
             try {
                 const docRef = doc(db, "settings", "twibbon");
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists() && docSnap.data().url) {
-                    currentTemplatePreview.src = docSnap.data().url;
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.url) currentTemplatePreview.src = data.url;
+                    if (data.logoLeftUrl) document.getElementById('currentLogoLeft').src = data.logoLeftUrl;
+                    if (data.logoRightUrl) document.getElementById('currentLogoRight').src = data.logoRightUrl;
+                    if (data.logoTextUrl) document.getElementById('currentLogoText').src = data.logoTextUrl;
                 }
             } catch (e) {
                 console.error("Gagal memuat template:", e);
             }
         }
 
-        saveTemplateBtn.addEventListener('click', async () => {
-            const file = templateUpload.files[0];
+        async function handleAssetUpload(fileInputId, previewId, btnId, fieldName) {
+            const fileInput = document.getElementById(fileInputId);
+            const preview = document.getElementById(previewId);
+            const btn = document.getElementById(btnId);
+            const file = fileInput.files[0];
+            
             if (!file) {
-                alert("Pilih file PNG terlebih dahulu!");
+                alert("Pilih file gambar terlebih dahulu!");
                 return;
             }
 
             try {
-                saveTemplateBtn.disabled = true;
-                saveTemplateBtn.innerText = "Mengupload...";
+                const originalText = btn.innerText;
+                btn.disabled = true;
+                btn.innerText = "Mengupload...";
                 templateStatus.innerText = "Sedang mengunggah ke Cloudinary...";
-                templateStatus.className = "text-sm mt-2 font-medium text-blue-500";
+                templateStatus.className = "text-sm mt-2 font-medium text-blue-500 w-full text-center";
 
-                // Upload to Cloudinary
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('upload_preset', UPLOAD_PRESET);
@@ -220,33 +257,37 @@
                     method: 'POST',
                     body: formData
                 });
-                
                 const data = await response.json();
                 
                 if (data.secure_url) {
                     templateStatus.innerText = "Menyimpan pengaturan...";
-                    // Save to Firestore
+                    // Save to Firestore using merge: true to keep other settings
                     await setDoc(doc(db, "settings", "twibbon"), {
-                        url: data.secure_url,
+                        [fieldName]: data.secure_url,
                         updatedAt: new Date()
-                    });
+                    }, { merge: true });
                     
-                    templateStatus.innerText = "Berhasil! Template twibbon telah diperbarui untuk semua orang.";
-                    templateStatus.className = "text-sm mt-2 font-medium text-green-500";
-                    currentTemplatePreview.src = data.secure_url;
-                    templateUpload.value = "";
+                    templateStatus.innerText = "Berhasil! Aset telah diperbarui.";
+                    templateStatus.className = "text-sm mt-2 font-medium text-green-500 w-full text-center";
+                    preview.src = data.secure_url;
+                    fileInput.value = "";
                 } else {
                     throw new Error("Gagal mendapatkan URL gambar dari Cloudinary");
                 }
             } catch (error) {
                 console.error(error);
-                templateStatus.innerText = "Gagal mengunggah template: " + error.message;
-                templateStatus.className = "text-sm mt-2 font-medium text-red-500";
+                templateStatus.innerText = "Gagal mengunggah aset: " + error.message;
+                templateStatus.className = "text-sm mt-2 font-medium text-red-500 w-full text-center";
             } finally {
-                saveTemplateBtn.disabled = false;
-                saveTemplateBtn.innerText = "Upload & Simpan Perubahan";
+                btn.disabled = false;
+                btn.innerText = originalText;
             }
-        });
+        }
+
+        document.getElementById('saveTemplateBtn').addEventListener('click', () => handleAssetUpload('templateUpload', 'currentTemplatePreview', 'saveTemplateBtn', 'url'));
+        document.getElementById('saveLogoLeftBtn').addEventListener('click', () => handleAssetUpload('logoLeftUpload', 'currentLogoLeft', 'saveLogoLeftBtn', 'logoLeftUrl'));
+        document.getElementById('saveLogoRightBtn').addEventListener('click', () => handleAssetUpload('logoRightUpload', 'currentLogoRight', 'saveLogoRightBtn', 'logoRightUrl'));
+        document.getElementById('saveLogoTextBtn').addEventListener('click', () => handleAssetUpload('logoTextUpload', 'currentLogoText', 'saveLogoTextBtn', 'logoTextUrl'));
 
         // --- Gallery Management ---
         async function loadGallery() {
