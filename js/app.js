@@ -507,7 +507,7 @@ function showResultPreview(url, type) {
             finalVideoPreview.parentNode.insertBefore(box, finalVideoPreview.nextSibling);
         }
         box.innerHTML = '';
-        const cloneContainer = previewContainer.cloneNode(true);
+        const cloneContainer = interactiveArea.cloneNode(true);
         cloneContainer.id = 'clonedPreviewContainer';
         cloneContainer.classList.remove('hidden');
         cloneContainer.style.width = '100%';
