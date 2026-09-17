@@ -102,18 +102,18 @@
     <!-- Firebase & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, deleteDoc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
         // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyBqCCrd38QRpXvn09GU_s9TNVLDq3aRaIA",
-            authDomain: "twibbon-osi-2026.firebaseapp.com",
-            projectId: "twibbon-osi-2026",
-            storageBucket: "twibbon-osi-2026.firebasestorage.app",
-            messagingSenderId: "558811199528",
-            appId: "1:558811199528:web:6cf5bb478ae461b9355d1d",
-            measurementId: "G-HGWCKVVZF2"
+            apiKey: "AIzaSyAAVp8acGErJ2bLM9lbA1kG5NyDjT9Fi9k",
+            authDomain: "twibbon-osi-2026-259e1.firebaseapp.com",
+            projectId: "twibbon-osi-2026-259e1",
+            storageBucket: "twibbon-osi-2026-259e1.firebasestorage.app",
+            messagingSenderId: "958517476745",
+            appId: "1:958517476745:web:29d8eab6e1d16349cb7558",
+            measurementId: "G-QKY6N1JC1H"
         };
 
         const app = initializeApp(firebaseConfig);

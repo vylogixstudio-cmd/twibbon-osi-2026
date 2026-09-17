@@ -34,17 +34,17 @@
         <div class="container mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3 md:gap-5 flex-wrap">
                 <!-- Logos Collaboration Group -->
-                <div class="flex items-center gap-2 md:gap-3">
+                <div class="flex items-center gap-1 md:gap-3">
                     <!-- Logo HIMASI (Kiri) -->
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-1">
+                    <div class="w-12 h-12 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-1">
                         <img src="logo.png" alt="Logo HIMASI" class="w-full h-full object-contain" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
                     </div>
 
                     <!-- Simbol Kolaborasi -->
-                    <span class="text-gold font-extrabold text-lg md:text-2xl px-0.5">✕</span>
+                    <span class="text-gold font-extrabold text-sm md:text-2xl px-1 flex-shrink-0">✕</span>
 
                     <!-- Logo OSI 2026 / Arci (Kanan) -->
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-1">
+                    <div class="w-12 h-12 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-1">
                         <img src="logo_osi.png" alt="Logo OSI 2026" class="w-full h-full object-contain" onerror="this.src='logo_osi_text.png'">
                     </div>
                 </div>
@@ -172,13 +172,13 @@
 
         // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyBqCCrd38QRpXvn09GU_s9TNVLDq3aRaIA",
-            authDomain: "twibbon-osi-2026.firebaseapp.com",
-            projectId: "twibbon-osi-2026",
-            storageBucket: "twibbon-osi-2026.firebasestorage.app",
-            messagingSenderId: "558811199528",
-            appId: "1:558811199528:web:6cf5bb478ae461b9355d1d",
-            measurementId: "G-HGWCKVVZF2"
+            apiKey: "AIzaSyAAVp8acGErJ2bLM9lbA1kG5NyDjT9Fi9k",
+            authDomain: "twibbon-osi-2026-259e1.firebaseapp.com",
+            projectId: "twibbon-osi-2026-259e1",
+            storageBucket: "twibbon-osi-2026-259e1.firebasestorage.app",
+            messagingSenderId: "958517476745",
+            appId: "1:958517476745:web:29d8eab6e1d16349cb7558",
+            measurementId: "G-QKY6N1JC1H"
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -469,6 +469,13 @@
                 alert("Hei! Isi Nama Panggilan dulu dong sebelum diproses hehe.");
                 participantName.focus();
                 return;
+            }
+
+            // Trik khusus untuk HP (iOS/Android) agar video bisa diputar
+            if (mediaType === 'video') {
+                videoPreview.muted = true;
+                videoPreview.play().catch(e => console.log('Bypass play', e));
+                videoPreview.pause();
             }
 
             processBtn.disabled = true;
