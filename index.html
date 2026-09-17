@@ -36,16 +36,16 @@
                 <!-- Logos Collaboration Group -->
                 <div class="flex items-center gap-1 md:gap-3">
                     <!-- Logo HIMASI (Kiri) -->
-                    <div class="w-12 h-12 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-1">
-                        <img src="logo.png" alt="Logo HIMASI" class="w-full h-full object-contain" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
+                    <div class="w-14 h-14 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-0.5">
+                        <img src="logo.png" alt="Logo HIMASI" class="w-full h-full object-cover scale-110" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
                     </div>
 
                     <!-- Simbol Kolaborasi -->
                     <span class="text-gold font-extrabold text-sm md:text-2xl px-1 flex-shrink-0">✕</span>
 
                     <!-- Logo OSI 2026 / Arci (Kanan) -->
-                    <div class="w-12 h-12 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-1">
-                        <img src="logo_osi.png" alt="Logo OSI 2026" class="w-full h-full object-contain" onerror="this.src='logo_osi_text.png'">
+                    <div class="w-14 h-14 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md border-2 border-gold p-0.5">
+                        <img src="logo_osi.png" alt="Logo OSI 2026" class="w-full h-full object-cover scale-110" onerror="this.src='logo_osi_text.png'">
                     </div>
                 </div>
 
@@ -81,70 +81,99 @@
                 </div>
             </div>
 
-            <!-- Upload Section -->
-            <div class="mb-6">
-                <label id="uploadLabel" for="mediaUpload" class="block w-full cursor-pointer bg-surface border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gold transition-colors group">
-                    <div class="mb-3">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+            <!-- EDITOR SECTION (Tahap 1 & 2) -->
+            <div id="editorSection">
+                <!-- Upload Section -->
+                <div class="mb-6">
+                    <label id="uploadLabel" for="mediaUpload" class="block w-full cursor-pointer bg-surface border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gold transition-colors group">
+                        <div class="mb-3">
+                            <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <span class="text-navy font-medium block mb-1">Klik untuk memilih Foto / Video</span>
+                        <span class="text-xs text-gray-500">JPG, PNG, MP4, WEBM (Durasi Max. 1 Menit)</span>
+                        <input type="file" id="mediaUpload" class="hidden">
+                    </label>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="previewContainer" class="hidden mb-6 flex flex-col items-center">
+                    <h3 class="text-navy font-semibold mb-3 w-full text-left">Pratinjau & Sesuaikan Posisi:</h3>
+                    
+                    <!-- Container menyesuaikan rasio asli twibbon -->
+                    <div id="interactiveArea" class="relative w-full max-w-sm rounded-xl overflow-hidden shadow-md bg-gray-200 flex items-center justify-center">
+                        <!-- For Image Preview -->
+                        <img id="imagePreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="Preview Foto">
+                        
+                        <!-- For Video Preview -->
+                        <video id="videoPreview" class="absolute inset-0 w-full h-full object-cover hidden" playsinline muted loop></video>
+                        
+                        <!-- Twibbon Overlay -->
+                        <img id="twibbonOverlay" src="twibbon.png" class="relative z-10 w-full h-auto block pointer-events-none" alt="Twibbon Overlay" onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
                     </div>
-                    <span class="text-navy font-medium block mb-1">Klik untuk memilih Foto / Video</span>
-                    <span class="text-xs text-gray-500">JPG, PNG, MP4, WEBM (Durasi Max. 1 Menit)</span>
-                    <input type="file" id="mediaUpload" class="hidden">
-                </label>
-            </div>
 
-            <!-- Preview Section -->
-            <div id="previewContainer" class="hidden mb-6 flex flex-col items-center">
-                <h3 class="text-navy font-semibold mb-3 w-full text-left">Pratinjau & Sesuaikan Posisi:</h3>
-                
-                <!-- Container menyesuaikan rasio asli twibbon -->
-                <div id="interactiveArea" class="relative w-full max-w-sm rounded-xl overflow-hidden shadow-md bg-gray-200 flex items-center justify-center">
-                    
-                    <!-- For Image Preview -->
-                    <img id="imagePreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="Preview Foto">
-                    
-                    <!-- For Video Preview -->
-                    <video id="videoPreview" class="absolute inset-0 w-full h-full object-cover hidden" playsinline muted loop></video>
-                    
-                    <!-- Twibbon Overlay (Relative agar container mengikuti tingginya) -->
-                    <img id="twibbonOverlay" src="twibbon.png" class="relative z-10 w-full h-auto block pointer-events-none" alt="Twibbon Overlay" onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
+                    <!-- Zoom Controls -->
+                    <div class="w-full max-w-sm mt-4 flex items-center gap-3">
+                        <svg class="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg>
+                        <input type="range" id="zoomSlider" min="0.1" max="3" step="0.05" value="1" class="w-full accent-gold">
+                        <svg class="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">💡 <b>Tips:</b> Anda bisa langsung <b>menggeser (drag)</b> foto/video di dalam bingkai, mencubit layar untuk zoom (di HP).</p>
                 </div>
 
-                <!-- Zoom Controls -->
-                <div class="w-full max-w-sm mt-4 flex items-center gap-3">
-                    <svg class="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg>
-                    <input type="range" id="zoomSlider" min="0.1" max="3" step="0.05" value="1" class="w-full accent-gold">
-                    <svg class="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                <!-- Action & Progress -->
+                <div id="actionContainer" class="hidden flex-col items-center gap-4">
+                    <button id="processBtn" class="w-full md:w-auto px-8 py-3 bg-navy hover:bg-navy-hover text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border border-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        Lihat Hasil (Preview)
+                    </button>
+
+                    <div id="progressContainer" class="w-full hidden mt-2">
+                        <div class="flex justify-between text-xs font-semibold text-navy mb-1">
+                            <span>Status:</span>
+                            <span id="progressText">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div id="progressBar" class="bg-gold h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 text-center" id="progressNote">Mohon tunggu, sedang memproses media...</p>
+                    </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-2 text-center">💡 <b>Tips:</b> Anda bisa langsung <b>menggeser (drag)</b> foto/video di dalam bingkai, mencubit layar untuk zoom (di HP), atau scroll mouse (di Laptop).</p>
             </div>
 
-            <!-- Action & Progress -->
-            <div id="actionContainer" class="hidden flex-col items-center gap-4">
+            <!-- RESULT SECTION (Tahap 3) -->
+            <div id="resultSection" class="hidden mb-6 flex-col items-center w-full max-w-sm mx-auto">
+                <h3 class="text-navy font-semibold mb-3 w-full text-center text-xl">🎉 Hasil Twibbon Anda</h3>
                 
-                <!-- Input Nama (Wajib) -->
-                <div class="w-full max-w-sm mt-2">
+                <div class="w-full rounded-xl overflow-hidden shadow-xl bg-gray-200 mb-6 relative border-4 border-gold">
+                    <img id="finalImagePreview" class="w-full h-auto hidden" alt="Hasil Twibbon">
+                    <video id="finalVideoPreview" class="w-full h-auto hidden" controls playsinline></video>
+                </div>
+
+                <div class="w-full mb-4">
                     <label for="participantName" class="block text-sm font-semibold text-navy mb-1">Nama Panggilan <span class="text-red-500">*</span></label>
                     <input type="text" id="participantName" placeholder="Ketik nama panggilanmu di sini..." class="w-full text-sm px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-gold" required>
                     <p class="text-xs text-gray-500 mt-1">Nama ini otomatis ditampilkan di Galeri Publik OSI 2026.</p>
                 </div>
 
-                <button id="processBtn" class="w-full md:w-auto px-8 py-3 bg-gold hover:bg-gold-hover text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border border-yellow-500">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Proses & Unduh
-                </button>
+                <div class="flex flex-col md:flex-row gap-3 w-full">
+                    <button id="retryBtn" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Buat Ulang
+                    </button>
+                    
+                    <button id="downloadPublishBtn" class="flex-1 px-4 py-3 bg-gold hover:bg-gold-hover text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border border-yellow-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Unduh & Masuk Galeri
+                    </button>
+                </div>
 
-                <div id="progressContainer" class="w-full hidden mt-2">
-                    <div class="flex justify-between text-xs font-semibold text-navy mb-1">
-                        <span>Status:</span>
-                        <span id="progressText">0%</span>
+                <div id="uploadProgressContainer" class="w-full hidden mt-4">
+                    <p class="text-sm font-semibold text-navy text-center mb-1" id="uploadProgressText">Mengunggah ke Galeri...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div class="bg-gold h-2 rounded-full w-full animate-pulse"></div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                        <div id="progressBar" class="bg-gold h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2 text-center" id="progressNote">Mohon jangan tutup halaman ini selama proses berjalan.</p>
                 </div>
             </div>
         </div>
@@ -205,9 +234,21 @@
         const participantName = document.getElementById('participantName');
         const publicGalleryGrid = document.getElementById('publicGalleryGrid');
 
+        // New UI Elements
+        const editorSection = document.getElementById('editorSection');
+        const resultSection = document.getElementById('resultSection');
+        const finalImagePreview = document.getElementById('finalImagePreview');
+        const finalVideoPreview = document.getElementById('finalVideoPreview');
+        const retryBtn = document.getElementById('retryBtn');
+        const downloadPublishBtn = document.getElementById('downloadPublishBtn');
+        const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+        const uploadProgressText = document.getElementById('uploadProgressText');
+
         let mediaType = null;
         let mediaFile = null;
         let currentMediaUrl = null;
+        let finalMediaBlob = null;
+        let finalMediaExt = null;
         
         // Initialize dynamic template & gallery
         async function initApp() {
@@ -342,8 +383,17 @@
             }
         }, { passive: false });
         window.addEventListener('touchend', (e) => {
-            if (e.touches.length < 2) initialPinchDistance = null;
-            if (e.touches.length === 0) isDragging = false;
+            if (e.touches.length < 2) {
+                initialPinchDistance = null;
+            }
+            if (e.touches.length === 1) {
+                // Restart drag from current single touch to prevent jumping
+                startX = e.touches[0].clientX - panX;
+                startY = e.touches[0].clientY - panY;
+                isDragging = true;
+            } else if (e.touches.length === 0) {
+                isDragging = false;
+            }
         });
 
         // Mouse Wheel Zoom
@@ -464,13 +514,6 @@
         processBtn.addEventListener('click', async () => {
             if (!mediaFile) return;
 
-            const nameValue = participantName.value.trim();
-            if (nameValue === "") {
-                alert("Hei! Isi Nama Panggilan dulu dong sebelum diproses hehe.");
-                participantName.focus();
-                return;
-            }
-
             // Trik khusus untuk HP (iOS/Android) agar video bisa diputar
             if (mediaType === 'video') {
                 videoPreview.muted = true;
@@ -509,45 +552,17 @@
                     }
 
                     drawCover(ctx, imagePreview, canvas.width, canvas.height, false);
-                    
                     if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
                         ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
                     }
 
                     progressBar.style.width = '100%';
-                    progressText.innerText = 'Selesai! Foto berhasil dibuat.';
-
-                    const dataUrl = canvas.toDataURL('image/png');
-                    const a = document.createElement('a');
-                    a.href = dataUrl;
-                    a.download = `Twibbon_Foto_OSI_HIMASI_${Date.now()}.png`;
-                    a.click();
-
-                    // Upload to Gallery (Wajib)
-                    try {
-                        progressText.innerText = 'Mengunggah ke Galeri Publik...';
-                        const formData = new FormData();
-                        formData.append('file', dataUrl);
-                        formData.append('upload_preset', UPLOAD_PRESET);
-                        
-                        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const cloudData = await res.json();
-                        
-                        if (cloudData.secure_url) {
-                            await addDoc(collection(db, "gallery"), {
-                                url: cloudData.secure_url,
-                                participantName: nameValue,
-                                createdAt: new Date()
-                            });
-                            // Refresh gallery quietly
-                            initApp();
-                        }
-                    } catch (err) {
-                        console.error("Gagal mengunggah ke galeri:", err);
-                    }
+                    
+                    canvas.toBlob((blob) => {
+                        finalMediaBlob = blob;
+                        finalMediaExt = 'png';
+                        showResultPreview(URL.createObjectURL(blob), 'image');
+                    }, 'image/png');
 
                 } else if (mediaType === 'video') {
                     progressText.innerText = 'Merender Video (1080p)...';
@@ -580,57 +595,14 @@
 
                     mediaRecorder.onstop = () => {
                         try {
-                            const blob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.style.display = 'none';
-                            a.href = url;
-                            
-                            const ext = (mediaRecorder.mimeType || mimeType).includes('mp4') ? 'mp4' : 'webm';
-                            a.download = `Twibbon_Video_OSI_HIMASI_${Date.now()}.${ext}`;
-                            
-                            document.body.appendChild(a);
-                            a.click();
-                            
-                            setTimeout(() => {
-                                document.body.removeChild(a);
-                                URL.revokeObjectURL(url);
-                            }, 100);
-
-                            // Upload Video to Gallery
-                            (async () => {
-                                try {
-                                    progressText.innerText = 'Mengunggah video ke Galeri... (mohon tunggu)';
-                                    const formData = new FormData();
-                                    formData.append('file', blob, 'twibbon_video.' + ext);
-                                    formData.append('upload_preset', UPLOAD_PRESET);
-                                    
-                                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
-                                        method: 'POST',
-                                        body: formData
-                                    });
-                                    const cloudData = await res.json();
-                                    
-                                    if (cloudData.secure_url) {
-                                        await addDoc(collection(db, "gallery"), {
-                                            url: cloudData.secure_url,
-                                            participantName: nameValue,
-                                            type: 'video',
-                                            createdAt: new Date()
-                                        });
-                                        initApp();
-                                        progressText.innerText = 'Selesai! Video diunduh & masuk Galeri.';
-                                    }
-                                } catch (err) {
-                                    console.error("Gagal mengunggah video ke galeri:", err);
-                                    progressText.innerText = 'Selesai! Video diunduh (gagal upload galeri).';
-                                }
-                            })();
+                            finalMediaBlob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
+                            finalMediaExt = (mediaRecorder.mimeType || mimeType).includes('mp4') ? 'mp4' : 'webm';
+                            showResultPreview(URL.createObjectURL(finalMediaBlob), 'video');
                         } catch (err) {
                             console.error(err);
                             alert('Gagal memproses file video akhir.');
-                        } finally {
                             resetUI();
+                        } finally {
                             videoPreview.loop = true;
                             videoPreview.play().catch(() => {});
                         }
@@ -666,7 +638,6 @@
                         }
 
                         drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
-                        
                         if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) {
                             ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
                         }
@@ -680,24 +651,117 @@
                     };
 
                     drawFrame();
-                    return; 
                 }
             } catch (error) {
                 console.error(error);
                 alert('Terjadi kesalahan saat memproses media: ' + error.message);
-                progressText.innerText = 'Proses Gagal.';
-                progressBar.classList.replace('bg-gold', 'bg-red-500');
-            }
-
-            if (mediaType === 'image') {
                 resetUI();
             }
+        });
+
+        function showResultPreview(url, type) {
+            editorSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            resultSection.classList.add('flex');
             
-            function resetUI() {
-                processBtn.disabled = false;
-                processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                uploadLabel.classList.remove('disabled-label');
-                fileInput.disabled = false;
+            if (type === 'image') {
+                finalImagePreview.src = url;
+                finalImagePreview.classList.remove('hidden');
+                finalVideoPreview.classList.add('hidden');
+            } else {
+                finalVideoPreview.src = url;
+                finalVideoPreview.classList.remove('hidden');
+                finalImagePreview.classList.add('hidden');
+            }
+            resetUI(); // reset background state
+        }
+
+        // --- Step 3 Actions ---
+        retryBtn.addEventListener('click', () => {
+            // Revoke object URL to free memory
+            if (finalImagePreview.src) URL.revokeObjectURL(finalImagePreview.src);
+            if (finalVideoPreview.src) URL.revokeObjectURL(finalVideoPreview.src);
+            
+            finalMediaBlob = null;
+            finalMediaExt = null;
+            
+            resultSection.classList.add('hidden');
+            resultSection.classList.remove('flex');
+            editorSection.classList.remove('hidden');
+            
+            // Note: Keep the chosen file in case they just want to adjust pan/zoom
+        });
+
+        downloadPublishBtn.addEventListener('click', async () => {
+            if (!finalMediaBlob) return;
+
+            const nameValue = participantName.value.trim();
+            if (nameValue === "") {
+                alert("Hei! Isi Nama Panggilan dulu dong sebelum masuk galeri hehe.");
+                participantName.focus();
+                return;
+            }
+
+            // 1. Download to device immediately
+            const objectUrl = finalImagePreview.src || finalVideoPreview.src || URL.createObjectURL(finalMediaBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = objectUrl;
+            a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => document.body.removeChild(a), 100);
+
+            // 2. Upload to Cloudinary & Firestore
+            downloadPublishBtn.disabled = true;
+            retryBtn.disabled = true;
+            downloadPublishBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            uploadProgressContainer.classList.remove('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', finalMediaBlob, `twibbon.${finalMediaExt}`);
+                formData.append('upload_preset', UPLOAD_PRESET);
+                
+                const endpoint = finalMediaExt === 'png' || finalMediaExt === 'jpg' ? 'image/upload' : 'video/upload';
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${endpoint}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const cloudData = await res.json();
+                
+                if (cloudData.secure_url) {
+                    await addDoc(collection(db, "gallery"), {
+                        url: cloudData.secure_url,
+                        participantName: nameValue,
+                        type: finalMediaExt === 'png' || finalMediaExt === 'jpg' ? 'image' : 'video',
+                        createdAt: new Date()
+                    });
+                    initApp(); // refresh gallery
+                    alert("Yey! Twibbon berhasil diunduh dan masuk ke Galeri OSI 2026! 🎉");
+                    
+                    // Reset semuanya ke awal
+                    location.reload();
+                } else {
+                    throw new Error("Gagal mendapatkan URL dari Cloudinary");
+                }
+            } catch (err) {
+                console.error("Gagal mengunggah ke galeri:", err);
+                alert("Twibbon berhasil diunduh, namun gagal diupload ke Galeri Publik karena masalah jaringan.");
+                downloadPublishBtn.disabled = false;
+                retryBtn.disabled = false;
+                downloadPublishBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                uploadProgressContainer.classList.add('hidden');
+            }
+        });
+        
+        function resetUI() {
+            processBtn.disabled = false;
+            processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            uploadLabel.classList.remove('disabled-label');
+            fileInput.disabled = false;
+            progressContainer.classList.add('hidden');
+        }
             }
         });
     </script>
