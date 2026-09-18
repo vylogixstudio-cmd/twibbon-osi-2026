@@ -174,6 +174,46 @@ async function uploadLargeFile(file, resourceType, onProgress) {
     return result;
 }
 
+/**
+ * Poll Cloudinary until background video transformation completes (handling HTTP 423),
+ * then download the resulting MP4 blob directly in the browser without page navigation.
+ */
+async function downloadTransformedVideo(videoUrl, onStatus) {
+    const startTime = Date.now();
+    const maxWaitMs = 120000; // 2 minutes max
+
+    while (Date.now() - startTime < maxWaitMs) {
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        try {
+            const res = await fetch(videoUrl);
+            if (res.status === 200) {
+                if (onStatus) onStatus('Mengunduh video ke galeri...');
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `Twibbon_OSI_HIMASI_${Date.now()}.mp4`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }, 2000);
+                return;
+            } else if (res.status === 423) {
+                // Cloudinary background processing: notify user with elapsed seconds
+                if (onStatus) onStatus(`Menggabungkan video di server (${elapsed}s)...`);
+            } else {
+                if (onStatus) onStatus(`Menyiapkan video (${elapsed}s)...`);
+            }
+        } catch (err) {
+            console.warn('Polling check error:', err);
+        }
+        await new Promise(r => setTimeout(r, 2000));
+    }
+    throw new Error('Proses video di server memakan waktu lebih lama dari biasanya. Coba unduh kembali.');
+}
+
 // ========================================
 // DOM Elements
 // ========================================
@@ -850,18 +890,15 @@ downloadPublishBtn.addEventListener('click', async () => {
                 ? buildCloudinaryOverlayUrl(cloudData.secure_url, twibbonPublicId, tW, tH, previewRect)
                 : cloudData.secure_url;
 
-            // 3. Download overlayed video via Cloudinary fl_attachment
-            const uploadText = document.querySelector('#uploadProgressContainer span') || document.getElementById('progressText2');
-            if (uploadText) uploadText.innerText = 'Menyiapkan File Download...';
+            // 3. Download overlayed video via Cloudinary fl_attachment with async polling
+            uploadProgressContainer.innerHTML = '<div class="flex items-center justify-center gap-2 p-3 bg-slate-50 rounded-lg"><svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium" id="videoProcessStatus">Menggabungkan video di server...</span></div>';
 
             const downloadUrl = overlayUrl.replace('/upload/', '/upload/fl_attachment/');
-            const dlLink = document.createElement('a');
-            dlLink.href = downloadUrl;
-            dlLink.setAttribute('download', `Twibbon_OSI_HIMASI_${Date.now()}.mp4`);
-            dlLink.style.display = 'none';
-            document.body.appendChild(dlLink);
-            dlLink.click();
-            setTimeout(() => document.body.removeChild(dlLink), 500);
+            const statusSpan = document.getElementById('videoProcessStatus');
+
+            await downloadTransformedVideo(downloadUrl, (msg) => {
+                if (statusSpan) statusSpan.innerText = msg;
+            });
 
             // 4. Save overlay URL to Firestore gallery
             await addDoc(collection(db, "gallery"), {
