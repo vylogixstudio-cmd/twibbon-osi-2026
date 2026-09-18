@@ -499,8 +499,8 @@ async function renderBlob(maxVidDim = 1080) {
 
             let mediaRecorder;
             try {
-                // Bitrate tinggi (5 Mbps) untuk hasil jernih di resolusi Full HD
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
+                // Bitrate tinggi (8 Mbps) untuk hasil super jernih di resolusi penuh
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 8000000 });
             } catch (e) {
                 mediaRecorder = new MediaRecorder(stream);
             }
@@ -702,18 +702,18 @@ downloadPublishBtn.addEventListener('click', async () => {
     try {
         if (mediaType === 'video') {
             uploadProgressContainer.classList.remove('hidden');
-            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Menyiapkan Video Full HD (1080p)...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
+            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Menyiapkan Video Resolusi Penuh...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
             
             document.getElementById('progressContainer').classList.remove('hidden');
             
             // FIX: Hapus premature pause — biarkan renderBlob() yang mengontrol state video sepenuhnya
-            // Sebelumnya: cloneVid.pause() di sini menyebabkan race condition
 
-            // AUTO-RETRY: Coba 1080p dulu, kalau gagal otomatis turun ke 720p
+            // AUTO-RETRY: Coba resolusi penuh (1920 = tidak di-scale untuk twibbon 1080x1920)
+            // Kalau gagal (HP crash), otomatis turun ke 720p
             try {
-                finalMediaBlob = await renderBlob(1080);
+                finalMediaBlob = await renderBlob(1920);
             } catch (hdError) {
-                console.warn('Render 1080p gagal, retry di 720p:', hdError.message);
+                console.warn('Render full-res gagal, retry di 720p:', hdError.message);
                 const pt2 = document.getElementById('progressText2');
                 if (pt2) pt2.innerText = 'Retry di 720p HD...';
                 if (progressBar) progressBar.style.width = '0%';
@@ -721,7 +721,7 @@ downloadPublishBtn.addEventListener('click', async () => {
                 try {
                     finalMediaBlob = await renderBlob(720);
                 } catch (sdError) {
-                    throw new Error('Video gagal dirender baik di 1080p maupun 720p. Coba ulangi proses. (' + sdError.message + ')');
+                    throw new Error('Video gagal dirender. Coba ulangi proses. (' + sdError.message + ')');
                 }
             }
             
