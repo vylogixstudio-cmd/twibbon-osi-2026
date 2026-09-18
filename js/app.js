@@ -581,8 +581,16 @@ async function renderBlob() {
     return new Promise(async (resolve, reject) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const tW = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
-        const tH = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
+        let tW = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
+        let tH = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
+        
+        // Cap canvas dimensions to max 2560px for mobile browser stability
+        const MAX_CANVAS_DIM = 2560;
+        if (tW > MAX_CANVAS_DIM || tH > MAX_CANVAS_DIM) {
+            const scale = Math.min(MAX_CANVAS_DIM / tW, MAX_CANVAS_DIM / tH);
+            tW = Math.round(tW * scale);
+            tH = Math.round(tH * scale);
+        }
         
         if (mediaType === 'image') {
             canvas.width = tW;
@@ -757,10 +765,35 @@ downloadPublishBtn.addEventListener('click', async () => {
     downloadPublishBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
-        const tW = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
-        const tH = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
-        const previewRect = interactiveArea.getBoundingClientRect();
+        const rawW = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
+        const rawH = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
         const isPhoto = (mediaType === 'image');
+        let tW = rawW;
+        let tH = rawH;
+
+        if (isPhoto) {
+            // Photo: cap max dimension to 2560 so it never exceeds Cloudinary's 5000px limit
+            const MAX_PHOTO_DIM = 2560;
+            if (tW > MAX_PHOTO_DIM || tH > MAX_PHOTO_DIM) {
+                const scale = Math.min(MAX_PHOTO_DIM / tW, MAX_PHOTO_DIM / tH);
+                tW = Math.round(tW * scale);
+                tH = Math.round(tH * scale);
+            }
+        } else {
+            // Video: cap max dimension to 1920 (Full HD, e.g. 1080x1920 portrait / 1920x1080 landscape)
+            // Codecs (H.264/MP4) also require even integer dimensions (divisible by 2)
+            const MAX_VID_DIM = 1920;
+            if (tW > MAX_VID_DIM || tH > MAX_VID_DIM) {
+                const scale = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH);
+                tW = Math.round((tW * scale) / 2) * 2;
+                tH = Math.round((tH * scale) / 2) * 2;
+            } else {
+                tW = Math.round(tW / 2) * 2;
+                tH = Math.round(tH / 2) * 2;
+            }
+        }
+
+        const previewRect = interactiveArea.getBoundingClientRect();
 
         uploadProgressContainer.classList.remove('hidden');
 
@@ -818,20 +851,17 @@ downloadPublishBtn.addEventListener('click', async () => {
                 : cloudData.secure_url;
 
             // 3. Download overlayed video via Cloudinary fl_attachment
-            //    No double-fetch: we uploaded the RAW video, now downloading the COMPOSED output.
             const uploadText = document.querySelector('#uploadProgressContainer span') || document.getElementById('progressText2');
             if (uploadText) uploadText.innerText = 'Menyiapkan File Download...';
 
             const downloadUrl = overlayUrl.replace('/upload/', '/upload/fl_attachment/');
             const dlLink = document.createElement('a');
             dlLink.href = downloadUrl;
-            dlLink.download = `Twibbon_OSI_HIMASI_${Date.now()}.mp4`;
-            dlLink.target = '_blank';
-            dlLink.rel = 'noopener noreferrer';
+            dlLink.setAttribute('download', `Twibbon_OSI_HIMASI_${Date.now()}.mp4`);
             dlLink.style.display = 'none';
             document.body.appendChild(dlLink);
             dlLink.click();
-            setTimeout(() => document.body.removeChild(dlLink), 200);
+            setTimeout(() => document.body.removeChild(dlLink), 500);
 
             // 4. Save overlay URL to Firestore gallery
             await addDoc(collection(db, "gallery"), {
