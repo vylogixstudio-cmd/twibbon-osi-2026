@@ -547,8 +547,10 @@ async function renderBlob(maxVidDim = 1080) {
                     frameCount++;
                     
                     const percent = Math.min((videoPreview.currentTime / duration) * 100, 100).toFixed(1);
-                    if (progressBar) progressBar.style.width = `${percent}%`;
-                    if (progressText) progressText.innerText = `Memproses Video: ${percent}%`;
+                    const pb = document.getElementById('progressBar2') || progressBar;
+                    const pt = document.getElementById('progressText2') || progressText;
+                    if (pb) pb.style.width = `${percent}%`;
+                    if (pt) pt.innerText = `Memproses Video: ${percent}%`;
                 }
                 requestAnimationFrame(drawFrame);
             };
@@ -770,6 +772,11 @@ downloadPublishBtn.addEventListener('click', async () => {
             document.getElementById('resultActions').classList.add('hidden');
             document.getElementById('successStateContainer')?.classList.remove('hidden');
             document.getElementById('successStateContainer')?.classList.add('flex');
+            
+            if (!isPhoto) {
+                const note = document.getElementById('videoDurationNote');
+                if (note) note.classList.remove('hidden');
+            }
         } else {
             throw new Error(cloudData.error ? cloudData.error.message : "Gagal upload Cloudinary");
         }
