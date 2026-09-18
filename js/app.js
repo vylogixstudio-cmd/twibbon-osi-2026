@@ -799,6 +799,9 @@ downloadPublishBtn.addEventListener('click', async () => {
                     const parts = cloudData.secure_url.split('/upload/');
                     const downloadUrl = parts[0] + '/upload/q_auto/' + parts[1].split('.')[0] + '.mp4';
                     
+                    const uploadText = document.querySelector('#uploadProgressContainer span');
+                    if (uploadText) uploadText.innerText = 'Menyiapkan File Download...';
+
                     const vidRes = await fetch(downloadUrl);
                     if (vidRes.ok) {
                         const vidBlob = await vidRes.blob();
