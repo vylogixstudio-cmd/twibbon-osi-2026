@@ -59,12 +59,20 @@ function extractCloudinaryPublicId(url) {
  *   - CSS `scale(userScale)` around centre maps directly to Cloudinary `z_` zoom.
  */
 function buildCloudinaryOverlayUrl(baseSecureUrl, twibbonPublicId, twibbonW, twibbonH, previewRect) {
-    const R = twibbonW / previewRect.width;
+    let pWidth = (previewRect && previewRect.width > 0) ? previewRect.width : savedPreviewWidth;
+    if (!pWidth || pWidth <= 0 || !isFinite(pWidth)) pWidth = 350;
+
+    const R = twibbonW / pWidth;
 
     // Convert preview-space pan to output-space, negated for Cloudinary coordinate system
-    const cx = Math.round(-panX * R);
-    const cy = Math.round(-panY * R);
-    const zoom = Math.max(0.1, userScale).toFixed(2);
+    let cx = Math.round(-panX * R);
+    let cy = Math.round(-panY * R);
+    if (!isFinite(cx)) cx = 0;
+    if (!isFinite(cy)) cy = 0;
+
+    let zoom = Math.max(0.1, userScale);
+    if (!isFinite(zoom)) zoom = 1.0;
+    const zoomStr = zoom.toFixed(2);
 
     // Encode public_id for overlay parameter (replace / with :)
     const overlayId = twibbonPublicId.replace(/\//g, ':');
@@ -73,7 +81,7 @@ function buildCloudinaryOverlayUrl(baseSecureUrl, twibbonPublicId, twibbonW, twi
     //   1. Position user media: c_fill with zoom and optional pan offset
     //   2. Overlay twibbon: l_{id}, sized to match, applied centre-gravity
     //   3. Quality: q_auto for optimal delivery
-    const positionParams = `c_fill,w_${twibbonW},h_${twibbonH},g_center,z_${zoom}` +
+    const positionParams = `c_fill,w_${twibbonW},h_${twibbonH},g_center,z_${zoomStr}` +
         (cx !== 0 ? `,x_${cx}` : '') +
         (cy !== 0 ? `,y_${cy}` : '');
     const overlayParams = `l_${overlayId},w_${twibbonW},h_${twibbonH},fl_layer_apply,g_center`;
@@ -277,6 +285,7 @@ let globalLabelPhoto = 'Untuk Foto';
 let globalLabelVideo = 'Untuk Video';
 
 let isVideoEnabled = false;
+let savedPreviewWidth = 350;
 let globalCaptionTemplate = `Halo semuanya! 👋
 Kenalin aku {nama}, siap mengikuti dan mensukseskan Orientasi Studi Mahasiswa Baru (OSI) 2026 Universitas Sunan Gresik! 🎓✨
 
@@ -673,6 +682,14 @@ async function renderBlob() {
 // ========================================
 processBtn.addEventListener('click', async () => {
     if (!mediaFile) return;
+
+    // Capture the interactiveArea width while it is still rendered and visible!
+    const rect = interactiveArea.getBoundingClientRect();
+    if (rect && rect.width > 0) {
+        savedPreviewWidth = rect.width;
+    } else if (interactiveArea.offsetWidth > 0) {
+        savedPreviewWidth = interactiveArea.offsetWidth;
+    }
 
     if (mediaType === 'image') {
         processBtn.disabled = true;
