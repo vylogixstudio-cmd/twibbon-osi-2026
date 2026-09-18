@@ -421,10 +421,40 @@ async function renderBlob() {
             canvas.height = Math.round(tH * scaleDown);
             if (canvas.height % 2 !== 0) canvas.height++;
 
-            videoPreview.muted = false;
-            videoPreview.currentTime = 0;
+            // FIX: Mute video selama rendering agar lolos autoplay policy di mobile
+            // Audio tetap di-capture melalui AudioContext di bawah
+            videoPreview.muted = true;
             videoPreview.loop = false;
-            await videoPreview.play().catch(e => reject(e));
+
+            // FIX: Reset currentTime ke 0 dan tunggu seeked event
+            // agar video tidak langsung 'ended' saat play()
+            try {
+                await new Promise((seekResolve, seekReject) => {
+                    const onSeeked = () => {
+                        videoPreview.removeEventListener('seeked', onSeeked);
+                        seekResolve();
+                    };
+                    videoPreview.addEventListener('seeked', onSeeked);
+                    videoPreview.currentTime = 0;
+                    // Fallback timeout jika seeked event tidak fire (misal sudah di 0)
+                    setTimeout(() => {
+                        videoPreview.removeEventListener('seeked', onSeeked);
+                        seekResolve();
+                    }, 500);
+                });
+            } catch (e) {
+                console.warn('Seek reset warning:', e);
+            }
+
+            // FIX: Proper try-catch — jika play() gagal, STOP dan jangan lanjut ke recorder
+            try {
+                await videoPreview.play();
+            } catch (playError) {
+                console.error('Video play() gagal saat render:', playError);
+                videoPreview.muted = false;
+                reject(new Error('Gagal memutar video untuk diproses. Coba tekan play manual dulu, lalu ulangi.'));
+                return; // PENTING: Hentikan eksekusi, jangan lanjut ke MediaRecorder
+            }
 
             const stream = canvas.captureStream(30);
             try {
@@ -435,17 +465,17 @@ async function renderBlob() {
                     window.globalMediaSource.connect(window.globalAudioDest);
                     window.globalMediaSource.connect(window.globalAudioCtx.destination);
                 }
-                if (window.globalAudioCtx.state === 'suspended') window.globalAudioCtx.resume();
+                if (window.globalAudioCtx.state === 'suspended') await window.globalAudioCtx.resume();
                 const audioTrack = window.globalAudioDest.stream.getAudioTracks()[0];
                 if (audioTrack) stream.addTrack(audioTrack);
             } catch (err) { 
-                console.warn('Audio fallback error:', err);
+                console.warn('Audio capture via AudioContext gagal, coba fallback:', err);
                 try {
                     const fallbackStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
                     if (fallbackStream && fallbackStream.getAudioTracks().length > 0) {
                         stream.addTrack(fallbackStream.getAudioTracks()[0]);
                     }
-                } catch (e) {}
+                } catch (e) { console.warn('Audio fallback juga gagal:', e); }
             }
 
             let mimeType = 'video/webm';
@@ -453,7 +483,6 @@ async function renderBlob() {
             else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
             else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
             else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
 
             let mediaRecorder;
             try {
@@ -463,17 +492,28 @@ async function renderBlob() {
             }
 
             const chunks = [];
+            let frameCount = 0; // FIX: Track jumlah frame yang berhasil dirender
             mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             mediaRecorder.onstop = () => {
+                // FIX: Restore muted state
+                videoPreview.muted = false;
+                videoPreview.pause();
+
+                // FIX: Validasi output — cegah file corrupt
+                if (chunks.length === 0 || frameCount < 2) {
+                    reject(new Error('Video gagal dirender — tidak ada frame yang tercapture. Coba ulangi proses.'));
+                    return;
+                }
                 try {
                     const blob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
+                    // FIX: Validasi ukuran blob minimal (< 10KB = pasti corrupt)
+                    if (blob.size < 10240) {
+                        reject(new Error('Hasil video terlalu kecil dan kemungkinan corrupt. Coba ulangi proses.'));
+                        return;
+                    }
                     finalMediaExt = (mediaRecorder.mimeType || mimeType).includes('mp4') ? 'mp4' : 'webm';
                     resolve(blob);
                 } catch (err) { reject(err); }
-                finally {
-                    videoPreview.muted = true;
-                    videoPreview.pause();
-                }
             };
             
             mediaRecorder.start(100);
@@ -492,6 +532,7 @@ async function renderBlob() {
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
                     if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
+                    frameCount++; // FIX: Hitung frame yang berhasil dirender
                     
                     const percent = Math.min((videoPreview.currentTime / duration) * 100, 100).toFixed(1);
                     if (progressBar) progressBar.style.width = `${percent}%`;
@@ -653,8 +694,8 @@ downloadPublishBtn.addEventListener('click', async () => {
             
             document.getElementById('progressContainer').classList.remove('hidden');
             
-            const cloneVid = document.querySelector('#cssVideoPreviewBox video');
-            if (cloneVid) cloneVid.pause();
+            // FIX: Hapus premature pause — biarkan renderBlob() yang mengontrol state video sepenuhnya
+            // Sebelumnya: cloneVid.pause() di sini menyebabkan race condition
 
             finalMediaBlob = await renderBlob();
             

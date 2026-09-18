@@ -148,22 +148,50 @@ async function handleAssetUpload(fileInputId, btnId, fieldName) {
         return;
     }
 
+    // FIX: Set batas 20MB — cukup untuk PNG twibbon 4-7MB
+    const MAX_SIZE_MB = 20;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        alert(`Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(1)} MB). Maksimal ${MAX_SIZE_MB} MB.`);
+        return;
+    }
+
     const originalText = btn.innerText;
     try {
         btn.disabled = true;
-        btn.innerText = "Mengupload...";
+        btn.innerText = "Mengupload... 0%";
 
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
         
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-            method: 'POST',
-            body: formData
+        // FIX: Gunakan XMLHttpRequest untuk progress tracking pada file besar
+        const data = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+            
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    btn.innerText = `Mengupload... ${percent}%`;
+                }
+            });
+            
+            xhr.onload = () => {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(result);
+                    } else {
+                        reject(new Error(result.error ? result.error.message : `Upload gagal (HTTP ${xhr.status})`));
+                    }
+                } catch (e) { reject(new Error('Gagal memproses respons server')); }
+            };
+            xhr.onerror = () => reject(new Error('Koneksi gagal. Periksa internet Anda.'));
+            xhr.send(formData);
         });
-        const data = await response.json();
         
         if (data.secure_url) {
+            btn.innerText = "Menyimpan...";
             await setDoc(doc(db, "settings", "twibbon"), {
                 [fieldName]: data.secure_url,
                 updatedAt: new Date()
