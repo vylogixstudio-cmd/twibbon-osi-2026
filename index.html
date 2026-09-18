@@ -19,23 +19,23 @@
         <div class="container mx-auto px-4 py-4 md:py-5 flex items-center justify-between relative z-10">
             <div class="flex items-center gap-4 md:gap-6 flex-wrap">
                 <!-- Logos Collaboration Group -->
-                <div class="flex items-center gap-2 md:gap-4 bg-white/10 backdrop-blur-sm p-1.5 md:p-2 rounded-full border border-white/20">
+                <div class="flex items-center gap-3 md:gap-5">
                     <!-- Logo HIMASI (Kiri) -->
-                    <div class="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner p-1 transition-transform hover:scale-105">
-                        <img id="displayLogoLeft" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo HIMASI" class="w-full h-full object-contain scale-110" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
+                    <div class="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center overflow-hidden flex-shrink-0 transition-transform hover:scale-105 drop-shadow-md">
+                        <img id="displayLogoLeft" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo HIMASI" class="w-full h-full object-contain scale-[1.15]" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUEyQjRDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNXMtMTAgNS0xMCA1em0wIDV2MTQiPjwvcGF0aD48L3N2Zz4='">
                     </div>
 
                     <!-- Simbol Kolaborasi -->
-                    <span class="text-gold-light font-extrabold text-sm md:text-xl px-1 flex-shrink-0 opacity-80">✕</span>
+                    <span class="text-gold-light font-extrabold text-sm md:text-xl px-1 flex-shrink-0 opacity-80 drop-shadow">✕</span>
 
                     <!-- Logo OSI 2026 / Arci (Kanan) -->
-                    <div class="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner p-1 transition-transform hover:scale-105">
-                        <img id="displayLogoRight" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo OSI 2026" class="w-full h-full object-contain scale-110" onerror="this.src='logo_osi_text.png'">
+                    <div class="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center overflow-hidden flex-shrink-0 transition-transform hover:scale-105 drop-shadow-md">
+                        <img id="displayLogoRight" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo OSI 2026" class="w-full h-full object-contain scale-[1.15]" onerror="this.src='logo_osi_text.png'">
                     </div>
                 </div>
 
                 <!-- Text Branding -->
-                <div class="ml-1 md:ml-2">
+                <div class="ml-2 md:ml-4">
                     <div class="flex items-center gap-3 mb-1">
                         <h1 class="text-xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">Twibbon Generator</h1>
                         <span class="bg-gradient-to-r from-gold to-gold-light text-navy text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-md shadow-sm uppercase tracking-wider">OSI 2026</span>
@@ -225,9 +225,16 @@
 
             <!-- KOLOM KANAN: GALERI PUBLIK -->
             <div class="lg:col-span-7 bg-white/90 backdrop-blur-md border border-white/40 rounded-[2rem] shadow-soft p-6 md:p-10">
-                <div class="text-center mb-8">
+                <div class="text-center mb-6">
                     <h3 class="text-2xl md:text-3xl font-extrabold text-navy mb-2 tracking-tight">Galeri OSI 2026</h3>
                     <p class="text-slate-500 text-sm max-w-md mx-auto">Kumpulan dukungan dari Mahasiswa Baru Universitas Sunan Gresik</p>
+                </div>
+                
+                <!-- Gallery Tabs -->
+                <div class="flex justify-center gap-2 mb-8">
+                    <button id="tabAll" class="px-5 py-2 rounded-full text-sm font-bold bg-navy text-white shadow-md transition-all">Semua</button>
+                    <button id="tabPhoto" class="px-5 py-2 rounded-full text-sm font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all">Foto</button>
+                    <button id="tabVideo" class="px-5 py-2 rounded-full text-sm font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all">Video</button>
                 </div>
                 
                 <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">

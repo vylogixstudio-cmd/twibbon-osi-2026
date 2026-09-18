@@ -117,46 +117,77 @@ async function initApp() {
         const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"), limit(20));
         const querySnapshot = await getDocs(q);
         
-        publicGalleryGrid.innerHTML = '';
-        if (querySnapshot.empty) {
-            publicGalleryGrid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-4">Belum ada twibbon di galeri. Jadilah yang pertama!</p>';
-        } else {
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const div = document.createElement('div');
-                div.className = "rounded-2xl overflow-hidden border-4 border-white aspect-square shadow-sm hover:shadow-xl transition-all duration-300 relative group hover:-translate-y-2 cursor-pointer bg-slate-100";
-                
-                let optimizedUrl = data.url;
-                let playIcon = '';
-                let clickAction = '';
-                
-                if (data.type === 'video') {
-                    let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
-                    optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_300,q_auto,f_auto/') + '.jpg';
-                    playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
-                    const streamUrl = data.url.replace('/upload/', '/upload/w_360,q_auto/');
-                    clickAction = `onclick="window.open('${streamUrl}', '_blank')"`;
-                } else {
-                    optimizedUrl = data.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/');
-                    clickAction = `onclick="window.open('${data.url}', '_blank')"`;
-                }
-                
-                div.innerHTML = `
-                    <div ${clickAction} class="w-full h-full relative block">
-                        <img src="${optimizedUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
-                        ${playIcon}
-                        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
-                            <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${data.participantName || 'Peserta OSI'}</p>
-                        </div>
-                    </div>
-                `;
-                publicGalleryGrid.appendChild(div);
-            });
-        }
-    } catch (e) {
-        console.error("Gagal inisialisasi:", e);
-        publicGalleryGrid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-4">Gagal memuat galeri.</p>';
+        window.globalGalleryData = [];
+        querySnapshot.forEach((docSnap) => {
+            window.globalGalleryData.push(docSnap.data());
+        });
+        
+        renderGallery('all');
+
+        // Setup Gallery Tabs
+        document.getElementById('tabAll').addEventListener('click', () => { setActiveTab('tabAll'); renderGallery('all'); });
+        document.getElementById('tabPhoto').addEventListener('click', () => { setActiveTab('tabPhoto'); renderGallery('image'); });
+        document.getElementById('tabVideo').addEventListener('click', () => { setActiveTab('tabVideo'); renderGallery('video'); });
+
+    } catch (err) {
+        console.error("Gagal load initApp:", err);
+        publicGalleryGrid.innerHTML = '<p class="text-red-500 text-sm col-span-full text-center py-4">Gagal memuat galeri. Pastikan koneksi internet stabil.</p>';
     }
+}
+
+function setActiveTab(activeId) {
+    const tabs = ['tabAll', 'tabPhoto', 'tabVideo'];
+    tabs.forEach(id => {
+        const btn = document.getElementById(id);
+        if (id === activeId) {
+            btn.className = "px-5 py-2 rounded-full text-sm font-bold bg-navy text-white shadow-md transition-all";
+        } else {
+            btn.className = "px-5 py-2 rounded-full text-sm font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all";
+        }
+    });
+}
+
+function renderGallery(filterType) {
+    publicGalleryGrid.innerHTML = '';
+    const filteredData = filterType === 'all' 
+        ? window.globalGalleryData 
+        : window.globalGalleryData.filter(d => d.type === filterType);
+
+    if (filteredData.length === 0) {
+        publicGalleryGrid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-4">Belum ada twibbon di kategori ini.</p>';
+        return;
+    }
+
+    filteredData.forEach((data) => {
+        const div = document.createElement('div');
+        div.className = "rounded-2xl overflow-hidden border-4 border-white aspect-square shadow-sm hover:shadow-xl transition-all duration-300 relative group hover:-translate-y-2 cursor-pointer bg-slate-100";
+        
+        let optimizedUrl = data.url;
+        let playIcon = '';
+        let clickAction = '';
+        
+        if (data.type === 'video') {
+            let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
+            optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_300,q_auto,f_auto/') + '.jpg';
+            playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
+            const streamUrl = data.url.replace('/upload/', '/upload/w_360,q_auto/');
+            clickAction = `onclick="window.open('${streamUrl}', '_blank')"`;
+        } else {
+            optimizedUrl = data.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/');
+            clickAction = `onclick="window.open('${data.url}', '_blank')"`;
+        }
+        
+        div.innerHTML = `
+            <div ${clickAction} class="w-full h-full relative block">
+                <img src="${optimizedUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
+                ${playIcon}
+                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
+                    <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${data.participantName || 'Peserta OSI'}</p>
+                </div>
+            </div>
+        `;
+        publicGalleryGrid.appendChild(div);
+    });
 }
 initApp();
 
