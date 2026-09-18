@@ -112,6 +112,23 @@ async function loadCurrentTemplate() {
             
             if (data.labelPhoto) document.getElementById('labelPhotoInput').value = data.labelPhoto;
             if (data.labelVideo) document.getElementById('labelVideoInput').value = data.labelVideo;
+
+            // Video Toggle
+            const videoToggle = document.getElementById('videoToggleInput');
+            const videoStatus = document.getElementById('videoToggleStatus');
+            const isVideoActive = data.isVideoEnabled === true;
+            if (videoToggle) videoToggle.checked = isVideoActive;
+            if (videoStatus) {
+                videoStatus.innerText = isVideoActive ? 'Status: Aktif (Ditampilkan)' : 'Status: Nonaktif (Disembunyikan)';
+                videoStatus.className = isVideoActive ? 'text-[11px] font-semibold text-green-600 mt-1 block' : 'text-[11px] font-semibold text-gray-500 mt-1 block';
+            }
+
+            // Caption Template
+            const defaultCaption = `Halo semuanya! 👋\nKenalin aku {nama}, siap mengikuti dan mensukseskan Orientasi Studi Mahasiswa Baru (OSI) 2026 Universitas Sunan Gresik! 🎓✨\n\n"Inovasi Tiada Henti, Berkarakter dan Berprestasi"\n\nSampai jumpa di kampus tercinta! 🚀\n#OSI2026 #HIMASI #UniversitasSunanGresik #Maba2026`;
+            const captionInput = document.getElementById('captionTemplateInput');
+            if (captionInput) {
+                captionInput.value = data.captionTemplate || defaultCaption;
+            }
         }
     } catch (e) {
         console.error("Gagal memuat template:", e);
@@ -244,6 +261,71 @@ document.getElementById('saveLabelsBtn').addEventListener('click', async () => {
         btn.innerText = originalText;
     }
 });
+
+// ========================================
+// Video Toggle (Show / Hide Video for Maba)
+// ========================================
+const videoToggleInput = document.getElementById('videoToggleInput');
+if (videoToggleInput) {
+    videoToggleInput.addEventListener('change', async (e) => {
+        const isEnabled = e.target.checked;
+        const videoStatus = document.getElementById('videoToggleStatus');
+        if (videoStatus) {
+            videoStatus.innerText = isEnabled ? 'Menyimpan...' : 'Menyimpan...';
+        }
+        try {
+            await setDoc(doc(db, "settings", "twibbon"), {
+                isVideoEnabled: isEnabled,
+                updatedAt: new Date()
+            }, { merge: true });
+
+            if (videoStatus) {
+                videoStatus.innerText = isEnabled ? 'Status: Aktif (Ditampilkan)' : 'Status: Nonaktif (Disembunyikan)';
+                videoStatus.className = isEnabled ? 'text-[11px] font-semibold text-green-600 mt-1 block' : 'text-[11px] font-semibold text-gray-500 mt-1 block';
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Gagal mengubah status video: " + err.message);
+            // Revert checkbox state on error
+            e.target.checked = !isEnabled;
+        }
+    });
+}
+
+// ========================================
+// Save Caption Template
+// ========================================
+const saveCaptionBtn = document.getElementById('saveCaptionBtn');
+if (saveCaptionBtn) {
+    saveCaptionBtn.addEventListener('click', async () => {
+        const btn = saveCaptionBtn;
+        const originalText = btn.innerText;
+        const captionText = document.getElementById('captionTemplateInput').value.trim();
+
+        if (!captionText) {
+            alert("Template caption tidak boleh kosong!");
+            return;
+        }
+
+        try {
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
+
+            await setDoc(doc(db, "settings", "twibbon"), {
+                captionTemplate: captionText,
+                updatedAt: new Date()
+            }, { merge: true });
+
+            alert("Berhasil! Template caption maba telah diperbarui.");
+        } catch (error) {
+            console.error(error);
+            alert("Gagal menyimpan caption: " + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    });
+}
 
 // ========================================
 // Utility: XSS Escape

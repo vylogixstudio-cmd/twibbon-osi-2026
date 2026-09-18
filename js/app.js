@@ -276,6 +276,15 @@ let globalTwibbonVideoUrl = 'twibbon_video.png';
 let globalLabelPhoto = 'Untuk Foto';
 let globalLabelVideo = 'Untuk Video';
 
+let isVideoEnabled = false;
+let globalCaptionTemplate = `Halo semuanya! 👋
+Kenalin aku {nama}, siap mengikuti dan mensukseskan Orientasi Studi Mahasiswa Baru (OSI) 2026 Universitas Sunan Gresik! 🎓✨
+
+"Inovasi Tiada Henti, Berkarakter dan Berprestasi"
+
+Sampai jumpa di kampus tercinta! 🚀
+#OSI2026 #HIMASI #UniversitasSunanGresik #Maba2026`;
+
 // ========================================
 // Initialize App: Load templates & gallery
 // ========================================
@@ -304,6 +313,23 @@ async function initApp() {
             if (data.logoLeftUrl) document.getElementById('displayLogoLeft').src = data.logoLeftUrl;
             if (data.logoRightUrl) document.getElementById('displayLogoRight').src = data.logoRightUrl;
             if (data.logoTextUrl) document.getElementById('displayLogoText').src = data.logoTextUrl;
+
+            // Video Feature Toggle
+            isVideoEnabled = (data.isVideoEnabled === true);
+            const selectVideoBox = document.getElementById('selectVideoTwibbon');
+            const tabVideoBtn = document.getElementById('tabVideo');
+            if (!isVideoEnabled) {
+                if (selectVideoBox) selectVideoBox.classList.add('hidden');
+                if (tabVideoBtn) tabVideoBtn.classList.add('hidden');
+            } else {
+                if (selectVideoBox) selectVideoBox.classList.remove('hidden');
+                if (tabVideoBtn) tabVideoBtn.classList.remove('hidden');
+            }
+
+            // Caption Template for Maba
+            if (data.captionTemplate) {
+                globalCaptionTemplate = data.captionTemplate;
+            }
         }
 
         const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"), limit(20));
@@ -915,6 +941,46 @@ downloadPublishBtn.addEventListener('click', async () => {
         document.getElementById('resultActions').classList.add('hidden');
         document.getElementById('successStateContainer')?.classList.remove('hidden');
         document.getElementById('successStateContainer')?.classList.add('flex');
+
+        // Populate Personalized Caption
+        const personalizedCaption = globalCaptionTemplate.replace(/\{nama\}/gi, nameValue);
+        const captionDisplay = document.getElementById('captionTextDisplay');
+        if (captionDisplay) {
+            captionDisplay.innerText = personalizedCaption;
+        }
+
+        const copyBtn = document.getElementById('copyCaptionBtn');
+        const copyBtnText = document.getElementById('copyBtnText');
+        if (copyBtn) {
+            copyBtn.onclick = async () => {
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(personalizedCaption);
+                    } else {
+                        // Fallback for older browsers / webviews
+                        const ta = document.createElement('textarea');
+                        ta.value = personalizedCaption;
+                        ta.style.position = 'fixed';
+                        ta.style.opacity = '0';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                    }
+                    if (copyBtnText) copyBtnText.innerText = 'Berhasil Disalin! 🎉';
+                    copyBtn.classList.remove('bg-gold', 'hover:bg-gold-light');
+                    copyBtn.classList.add('bg-green-500', 'text-white');
+                    setTimeout(() => {
+                        if (copyBtnText) copyBtnText.innerText = 'Salin Caption Lengkap';
+                        copyBtn.classList.remove('bg-green-500', 'text-white');
+                        copyBtn.classList.add('bg-gold', 'hover:bg-gold-light');
+                    }, 2500);
+                } catch (err) {
+                    console.error('Gagal menyalin:', err);
+                    alert('Gagal menyalin otomatis. Silakan blok teks caption lalu salin manual.');
+                }
+            };
+        }
 
         if (!isPhoto) {
             const note = document.getElementById('videoDurationNote');
