@@ -478,11 +478,25 @@ async function renderBlob() {
                 } catch (e) { console.warn('Audio fallback juga gagal:', e); }
             }
 
+            // FIX: Prioritaskan MP4 agar bisa diputar di galeri HP
             let mimeType = 'video/webm';
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
-            else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
+            const supportedTypes = [
+                'video/mp4',
+                'video/mp4;codecs=avc1',
+                'video/mp4;codecs=h264',
+                'video/webm;codecs=h264',
+                'video/webm;codecs=vp8,opus',
+                'video/webm;codecs=vp9,opus',
+                'video/webm;codecs=vp8',
+                'video/webm'
+            ];
+            
+            for (const type of supportedTypes) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    mimeType = type;
+                    break;
+                }
+            }
 
             let mediaRecorder;
             try {
