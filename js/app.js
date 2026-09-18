@@ -464,13 +464,25 @@ async function renderBlob(maxVidDim = 1080) {
                 console.warn('Gagal ekstrak audio:', err);
             }
 
-            // FIX: Prioritaskan MP4 agar bisa diputar di galeri HP
+            // Prioritaskan MP4 agar bisa diputar di galeri HP & laptop
+            // Chrome desktop butuh codec profile spesifik (avc1.42E01E) untuk support MP4 recording
             let mimeType = 'video/webm';
             const supportedTypes = [
-                'video/mp4',
+                // MP4 dengan codec profile spesifik (Chrome 121+ desktop)
+                'video/mp4;codecs="avc1.42E01E,opus"',
+                'video/mp4;codecs="avc1.64001f,opus"',
+                'video/mp4;codecs="avc1.42E01E"',
+                'video/mp4;codecs="avc1.64001f"',
+                'video/mp4;codecs=avc1.42E01E,opus',
+                'video/mp4;codecs=avc1.64001f,opus',
+                'video/mp4;codecs=avc1.42E01E',
+                // MP4 generic (Chrome mobile / Safari)
                 'video/mp4;codecs=avc1',
                 'video/mp4;codecs=h264',
+                'video/mp4',
+                // WebM H264 (beberapa browser support)
                 'video/webm;codecs=h264',
+                // WebM VP8/VP9 fallback
                 'video/webm;codecs=vp8,opus',
                 'video/webm;codecs=vp9,opus',
                 'video/webm;codecs=vp8',
@@ -480,6 +492,7 @@ async function renderBlob(maxVidDim = 1080) {
             for (const type of supportedTypes) {
                 if (MediaRecorder.isTypeSupported(type)) {
                     mimeType = type;
+                    console.log('MediaRecorder format:', type);
                     break;
                 }
             }
