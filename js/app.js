@@ -414,68 +414,54 @@ async function renderBlob() {
             }, 'image/jpeg', 0.90);
 
         } else if (mediaType === 'video') {
-            const MAX_VID_DIM = 1280;
+            // FIX: Turunkan resolusi ke 720p agar encoder H264 Android tidak crash/berhenti di tengah jalan
+            const MAX_VID_DIM = 720;
             const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
             canvas.width = Math.round(tW * scaleDown);
             if (canvas.width % 2 !== 0) canvas.width++;
             canvas.height = Math.round(tH * scaleDown);
             if (canvas.height % 2 !== 0) canvas.height++;
 
-            // FIX: Mute video selama rendering agar lolos autoplay policy di mobile
-            // Audio tetap di-capture melalui AudioContext di bawah
-            videoPreview.muted = true;
+            // FIX: Jangan mute agar suara asli ikut terekam ke hasil akhir
+            videoPreview.muted = false;
             videoPreview.loop = false;
 
-            // FIX: Reset currentTime ke 0 dan tunggu seeked event
-            // agar video tidak langsung 'ended' saat play()
-            try {
-                await new Promise((seekResolve, seekReject) => {
-                    const onSeeked = () => {
-                        videoPreview.removeEventListener('seeked', onSeeked);
-                        seekResolve();
-                    };
-                    videoPreview.addEventListener('seeked', onSeeked);
-                    videoPreview.currentTime = 0;
-                    // Fallback timeout jika seeked event tidak fire (misal sudah di 0)
-                    setTimeout(() => {
-                        videoPreview.removeEventListener('seeked', onSeeked);
-                        seekResolve();
-                    }, 500);
-                });
-            } catch (e) {
-                console.warn('Seek reset warning:', e);
-            }
-
-            // FIX: Proper try-catch — jika play() gagal, STOP dan jangan lanjut ke recorder
+            // FIX: Reset dan langsung play tanpa menunggu event agar "user gesture" token tidak hilang (lolos autoplay)
+            videoPreview.currentTime = 0;
             try {
                 await videoPreview.play();
             } catch (playError) {
                 console.error('Video play() gagal saat render:', playError);
-                videoPreview.muted = false;
                 reject(new Error('Gagal memutar video untuk diproses. Coba tekan play manual dulu, lalu ulangi.'));
-                return; // PENTING: Hentikan eksekusi, jangan lanjut ke MediaRecorder
+                return;
             }
 
             const stream = canvas.captureStream(30);
+            
+            // FIX: Cara teraman ambil audio adalah via captureStream bawaan video element
             try {
-                if (!window.globalAudioCtx) {
-                    window.globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    window.globalMediaSource = window.globalAudioCtx.createMediaElementSource(videoPreview);
-                    window.globalAudioDest = window.globalAudioCtx.createMediaStreamDestination();
-                    window.globalMediaSource.connect(window.globalAudioDest);
-                    window.globalMediaSource.connect(window.globalAudioCtx.destination);
+                const vidStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
+                let audioAdded = false;
+                if (vidStream && vidStream.getAudioTracks().length > 0) {
+                    stream.addTrack(vidStream.getAudioTracks()[0]);
+                    audioAdded = true;
                 }
-                if (window.globalAudioCtx.state === 'suspended') await window.globalAudioCtx.resume();
-                const audioTrack = window.globalAudioDest.stream.getAudioTracks()[0];
-                if (audioTrack) stream.addTrack(audioTrack);
-            } catch (err) { 
-                console.warn('Audio capture via AudioContext gagal, coba fallback:', err);
-                try {
-                    const fallbackStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
-                    if (fallbackStream && fallbackStream.getAudioTracks().length > 0) {
-                        stream.addTrack(fallbackStream.getAudioTracks()[0]);
+                
+                // Fallback ke Web Audio API kalau cara di atas tidak didukung
+                if (!audioAdded) {
+                    if (!window.globalAudioCtx) {
+                        window.globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        window.globalMediaSource = window.globalAudioCtx.createMediaElementSource(videoPreview);
+                        window.globalAudioDest = window.globalAudioCtx.createMediaStreamDestination();
+                        window.globalMediaSource.connect(window.globalAudioDest);
+                        window.globalMediaSource.connect(window.globalAudioCtx.destination);
                     }
-                } catch (e) { console.warn('Audio fallback juga gagal:', e); }
+                    if (window.globalAudioCtx.state === 'suspended') await window.globalAudioCtx.resume();
+                    const audioTrack = window.globalAudioDest.stream.getAudioTracks()[0];
+                    if (audioTrack) stream.addTrack(audioTrack);
+                }
+            } catch (err) { 
+                console.warn('Gagal ekstrak audio:', err);
             }
 
             // FIX: Prioritaskan MP4 agar bisa diputar di galeri HP
@@ -500,27 +486,24 @@ async function renderBlob() {
 
             let mediaRecorder;
             try {
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 3500000 });
+                // FIX: Turunkan bitrate sedikit untuk stabilitas hardware encoder
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 2500000 });
             } catch (e) {
                 mediaRecorder = new MediaRecorder(stream);
             }
 
             const chunks = [];
-            let frameCount = 0; // FIX: Track jumlah frame yang berhasil dirender
+            let frameCount = 0;
             mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             mediaRecorder.onstop = () => {
-                // FIX: Restore muted state
-                videoPreview.muted = false;
                 videoPreview.pause();
 
-                // FIX: Validasi output — cegah file corrupt
                 if (chunks.length === 0 || frameCount < 2) {
                     reject(new Error('Video gagal dirender — tidak ada frame yang tercapture. Coba ulangi proses.'));
                     return;
                 }
                 try {
                     const blob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
-                    // FIX: Validasi ukuran blob minimal (< 10KB = pasti corrupt)
                     if (blob.size < 10240) {
                         reject(new Error('Hasil video terlalu kecil dan kemungkinan corrupt. Coba ulangi proses.'));
                         return;
@@ -536,17 +519,19 @@ async function renderBlob() {
             const frameInterval = 1000 / 30;
             
             const drawFrame = (timestamp) => {
-                if (videoPreview.paused || videoPreview.ended) {
+                // FIX: Hanya berhenti jika status ended, jangan kalau sedang paused/buffer
+                if (videoPreview.ended) {
                     if (mediaRecorder.state === 'recording') mediaRecorder.stop();
                     return;
                 }
-                if (timestamp - lastDrawTime >= frameInterval) {
+                // FIX: Jangan gambar frame kalau video sedang buffering/paused
+                if (timestamp - lastDrawTime >= frameInterval && !videoPreview.paused) {
                     lastDrawTime = timestamp;
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
                     if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-                    frameCount++; // FIX: Hitung frame yang berhasil dirender
+                    frameCount++;
                     
                     const percent = Math.min((videoPreview.currentTime / duration) * 100, 100).toFixed(1);
                     if (progressBar) progressBar.style.width = `${percent}%`;
