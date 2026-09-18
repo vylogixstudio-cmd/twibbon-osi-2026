@@ -317,13 +317,10 @@ async function initApp() {
             // Video Feature Toggle
             isVideoEnabled = (data.isVideoEnabled === true);
             const selectVideoBox = document.getElementById('selectVideoTwibbon');
-            const tabVideoBtn = document.getElementById('tabVideo');
             if (!isVideoEnabled) {
                 if (selectVideoBox) selectVideoBox.classList.add('hidden');
-                if (tabVideoBtn) tabVideoBtn.classList.add('hidden');
             } else {
                 if (selectVideoBox) selectVideoBox.classList.remove('hidden');
-                if (tabVideoBtn) tabVideoBtn.classList.remove('hidden');
             }
 
             // Caption Template for Maba
@@ -332,7 +329,7 @@ async function initApp() {
             }
         }
 
-        const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"), limit(20));
+        const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"), limit(40));
         const querySnapshot = await getDocs(q);
         
         window.globalGalleryData = [];
@@ -340,12 +337,7 @@ async function initApp() {
             window.globalGalleryData.push(docSnap.data());
         });
         
-        renderGallery('all');
-
-        // Setup Gallery Tabs
-        document.getElementById('tabAll').addEventListener('click', () => { setActiveTab('tabAll'); renderGallery('all'); });
-        document.getElementById('tabPhoto').addEventListener('click', () => { setActiveTab('tabPhoto'); renderGallery('image'); });
-        document.getElementById('tabVideo').addEventListener('click', () => { setActiveTab('tabVideo'); renderGallery('video'); });
+        renderPhotoGallery();
 
     } catch (err) {
         console.error("Gagal load initApp:", err);
@@ -353,53 +345,28 @@ async function initApp() {
     }
 }
 
-function setActiveTab(activeId) {
-    const tabs = ['tabAll', 'tabPhoto', 'tabVideo'];
-    tabs.forEach(id => {
-        const btn = document.getElementById(id);
-        if (id === activeId) {
-            btn.className = "px-5 py-2 rounded-full text-sm font-bold bg-navy text-white shadow-md transition-all";
-        } else {
-            btn.className = "px-5 py-2 rounded-full text-sm font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all";
-        }
-    });
-}
-
-function renderGallery(filterType) {
+function renderPhotoGallery() {
     publicGalleryGrid.innerHTML = '';
-    const filteredData = filterType === 'all' 
-        ? window.globalGalleryData 
-        : window.globalGalleryData.filter(d => d.type === filterType);
+    // Show only photo entries (ignore video entries)
+    const photoData = (window.globalGalleryData || []).filter(d => d.type !== 'video');
 
-    if (filteredData.length === 0) {
-        publicGalleryGrid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-4">Belum ada twibbon di kategori ini.</p>';
+    if (photoData.length === 0) {
+        publicGalleryGrid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-8">Belum ada twibbon foto di galeri. Jadilah yang pertama!</p>';
         return;
     }
 
-    filteredData.forEach((data) => {
+    photoData.forEach((data) => {
         const safeName = escapeHtml(data.participantName || 'Peserta OSI');
         const safeUrl = escapeHtml(data.url);
         const div = document.createElement('div');
         div.className = "rounded-2xl overflow-hidden border-4 border-white aspect-square shadow-sm hover:shadow-xl transition-all duration-300 relative group hover:-translate-y-2 cursor-pointer bg-slate-100";
         
-        let optimizedUrl;
-        let playIcon = '';
-        let clickAction = '';
-        
-        if (data.type === 'video') {
-            optimizedUrl = addThumbnailTransform(data.url, 300, true);
-            playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
-            const streamUrl = addThumbnailTransform(data.url, 360);
-            clickAction = `onclick="window.open('${escapeHtml(streamUrl)}', '_blank')"`;
-        } else {
-            optimizedUrl = addThumbnailTransform(data.url, 300);
-            clickAction = `onclick="window.open('${safeUrl}', '_blank')"`;
-        }
+        const optimizedUrl = addThumbnailTransform(data.url, 300);
+        const clickAction = `onclick="window.open('${safeUrl}', '_blank')"`;
         
         div.innerHTML = `
             <div ${clickAction} class="w-full h-full relative block">
                 <img src="${escapeHtml(optimizedUrl)}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
-                ${playIcon}
                 <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
                     <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${safeName}</p>
                 </div>
