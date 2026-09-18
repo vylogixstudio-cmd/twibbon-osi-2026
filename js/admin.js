@@ -246,6 +246,29 @@ document.getElementById('saveLabelsBtn').addEventListener('click', async () => {
 });
 
 // ========================================
+// Utility: XSS Escape
+// ========================================
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+// Adds thumbnail transform before the /v{digits}/ segment in a Cloudinary URL
+function addThumbnailTransform(url, width, asImage = false) {
+    let result = url;
+    if (asImage) {
+        result = result.replace(/\.[^.\/]+$/, '.jpg');
+    }
+    const match = result.match(/(\/v\d+\/)/);
+    if (match) {
+        return result.replace(match[1], `/w_${width},c_scale,q_auto,f_auto${match[1]}`);
+    }
+    return result.replace('/upload/', `/upload/w_${width},c_scale,q_auto,f_auto/`);
+}
+
+// ========================================
 // Gallery Management
 // ========================================
 async function loadGallery() {
@@ -265,28 +288,30 @@ async function loadGallery() {
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
+            const safeName = escapeHtml(data.participantName || 'Anonim');
+            const safeUrl = escapeHtml(data.url);
+            const safeId = escapeHtml(docSnap.id);
             const div = document.createElement('div');
             div.className = "relative group bg-gray-100 rounded-lg overflow-hidden border border-gray-200 aspect-square";
             
-            let optimizedUrl = data.url;
+            let optimizedUrl;
             let playIcon = '';
             
             if (data.type === 'video') {
-                let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
-                optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_300,q_auto,f_auto/') + '.jpg';
+                optimizedUrl = addThumbnailTransform(data.url, 300, true);
                 playIcon = '<div class="absolute top-2 left-2 bg-black/60 rounded px-2 py-1 text-white text-xs font-bold">🎬 Video</div>';
             } else {
-                optimizedUrl = data.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/');
+                optimizedUrl = addThumbnailTransform(data.url, 300);
             }
 
             div.innerHTML = `
-                <img src="${optimizedUrl}" class="w-full h-full object-cover" alt="Gallery Image">
+                <img src="${escapeHtml(optimizedUrl)}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="Gallery Image">
                 ${playIcon}
                 <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
-                    <span class="block text-white text-xs font-semibold text-center truncate">${data.participantName || 'Anonim'}</span>
+                    <span class="block text-white text-xs font-semibold text-center truncate">${safeName}</span>
                 </div>
                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
-                    <button class="delete-btn bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1.5 px-3 rounded shadow" data-id="${docSnap.id}">Hapus</button>
+                    <button class="delete-btn bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1.5 px-3 rounded shadow" data-id="${safeId}">Hapus</button>
                 </div>
             `;
             adminGalleryGrid.appendChild(div);

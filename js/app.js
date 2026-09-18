@@ -23,6 +23,158 @@ const CLOUD_NAME = 'n9qafiew';
 const UPLOAD_PRESET = 'h5j0pysw';
 
 // ========================================
+// Utility Functions
+// ========================================
+
+/** Escape user-supplied strings to prevent XSS via innerHTML */
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+/** Extract the public_id from a Cloudinary URL (without extension) */
+function extractCloudinaryPublicId(url) {
+    if (!url) return null;
+    // Match after the last /v{digits}/ segment, before the extension
+    const match = url.match(/\/v\d+\/(.+)\.[^.]+$/);
+    if (match) return match[1];
+    // Fallback: after /upload/ (no version in URL)
+    const match2 = url.match(/\/upload\/(?:[^/]+\/)*?([^/]+)\.[^.]+$/);
+    if (match2) return match2[1];
+    return null;
+}
+
+/**
+ * Build a Cloudinary URL that applies the twibbon overlay server-side.
+ * Maps the user's preview-space pan/zoom into Cloudinary crop parameters.
+ *
+ * How the mapping works:
+ *   - CSS `translate(panX,panY)` moves the IMAGE element; panning right (positive panX)
+ *     means the visible centre shifts right. In Cloudinary g_center, positive x shifts the
+ *     crop window right, showing content more to the right — the same visual effect.
+ *     BUT Cloudinary x/y shift the CROP centre, so a positive x means the crop catches
+ *     content to the right, which visually pushes the image LEFT. Hence we NEGATE panX.
+ *   - CSS `scale(userScale)` around centre maps directly to Cloudinary `z_` zoom.
+ */
+function buildCloudinaryOverlayUrl(baseSecureUrl, twibbonPublicId, twibbonW, twibbonH, previewRect) {
+    const R = twibbonW / previewRect.width;
+
+    // Convert preview-space pan to output-space, negated for Cloudinary coordinate system
+    const cx = Math.round(-panX * R);
+    const cy = Math.round(-panY * R);
+    const zoom = Math.max(0.1, userScale).toFixed(2);
+
+    // Encode public_id for overlay parameter (replace / with :)
+    const overlayId = twibbonPublicId.replace(/\//g, ':');
+
+    // Transformation chain:
+    //   1. Position user media: c_fill with zoom and optional pan offset
+    //   2. Overlay twibbon: l_{id}, sized to match, applied centre-gravity
+    //   3. Quality: q_auto for optimal delivery
+    const positionParams = `c_fill,w_${twibbonW},h_${twibbonH},g_center,z_${zoom}` +
+        (cx !== 0 ? `,x_${cx}` : '') +
+        (cy !== 0 ? `,y_${cy}` : '');
+    const overlayParams = `l_${overlayId},w_${twibbonW},h_${twibbonH},fl_layer_apply,g_center`;
+    const transforms = `${positionParams}/${overlayParams}/q_auto`;
+
+    return baseSecureUrl.replace('/upload/', `/upload/${transforms}/`);
+}
+
+/**
+ * Insert a thumbnail-size transformation before the /v{digits}/ version segment
+ * in a Cloudinary URL.  Works for both old (plain) and new (overlay-transformed) URLs.
+ * Set asImage=true for video→JPG thumbnail conversion.
+ */
+function addThumbnailTransform(url, width, asImage = false) {
+    let result = url;
+    if (asImage) {
+        result = result.replace(/\.[^.\/]+$/, '.jpg');
+    }
+    const match = result.match(/(\/v\d+\/)/);
+    if (match) {
+        return result.replace(match[1], `/w_${width},c_scale,q_auto,f_auto${match[1]}`);
+    }
+    return result.replace('/upload/', `/upload/w_${width},c_scale,q_auto,f_auto/`);
+}
+
+/**
+ * Chunked/resumable upload to Cloudinary for large files (especially video).
+ * Uses 6 MB chunks with X-Unique-Upload-Id header and Content-Range.
+ * Retries each chunk up to 3 times with exponential backoff.
+ * Falls back to simple single-request upload for files ≤ 6 MB.
+ */
+async function uploadLargeFile(file, resourceType, onProgress) {
+    const CHUNK_SIZE = 6 * 1024 * 1024; // 6 MB
+    const uniqueId = 'uqid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const totalSize = file.size;
+    const totalChunks = Math.ceil(totalSize / CHUNK_SIZE);
+
+    // Small files: simple single-request upload
+    if (totalChunks <= 1) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
+            method: 'POST', body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || 'Upload gagal');
+        if (onProgress) onProgress(100);
+        return data;
+    }
+
+    // Large files: chunked upload
+    let result = null;
+    for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, totalSize);
+        const chunk = file.slice(start, end);
+
+        const formData = new FormData();
+        formData.append('file', chunk, file.name || `upload.${file.type.split('/')[1] || 'bin'}`);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        let retries = 0;
+        const MAX_RETRIES = 3;
+
+        while (retries <= MAX_RETRIES) {
+            try {
+                const res = await fetch(
+                    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-Unique-Upload-Id': uniqueId,
+                            'Content-Range': `bytes ${start}-${end - 1}/${totalSize}`
+                        },
+                        body: formData
+                    }
+                );
+
+                const responseData = await res.json();
+
+                // Only the final chunk returns the full upload result
+                if (i === totalChunks - 1) {
+                    if (!res.ok) throw new Error(responseData.error?.message || 'Upload gagal');
+                    result = responseData;
+                }
+
+                if (onProgress) onProgress(Math.round(((i + 1) / totalChunks) * 100));
+                break; // chunk succeeded, move to next
+            } catch (err) {
+                retries++;
+                if (retries > MAX_RETRIES) throw new Error(`Upload gagal setelah ${MAX_RETRIES} percobaan: ${err.message}`);
+                await new Promise(r => setTimeout(r, 1000 * retries)); // exponential backoff
+            }
+        }
+    }
+
+    return result;
+}
+
+// ========================================
 // DOM Elements
 // ========================================
 const fileInput = document.getElementById('mediaUpload');
@@ -159,30 +311,31 @@ function renderGallery(filterType) {
     }
 
     filteredData.forEach((data) => {
+        const safeName = escapeHtml(data.participantName || 'Peserta OSI');
+        const safeUrl = escapeHtml(data.url);
         const div = document.createElement('div');
         div.className = "rounded-2xl overflow-hidden border-4 border-white aspect-square shadow-sm hover:shadow-xl transition-all duration-300 relative group hover:-translate-y-2 cursor-pointer bg-slate-100";
         
-        let optimizedUrl = data.url;
+        let optimizedUrl;
         let playIcon = '';
         let clickAction = '';
         
         if (data.type === 'video') {
-            let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
-            optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_300,q_auto,f_auto/') + '.jpg';
+            optimizedUrl = addThumbnailTransform(data.url, 300, true);
             playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
-            const streamUrl = data.url.replace('/upload/', '/upload/w_360,q_auto/');
-            clickAction = `onclick="window.open('${streamUrl}', '_blank')"`;
+            const streamUrl = addThumbnailTransform(data.url, 360);
+            clickAction = `onclick="window.open('${escapeHtml(streamUrl)}', '_blank')"`;
         } else {
-            optimizedUrl = data.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/');
-            clickAction = `onclick="window.open('${data.url}', '_blank')"`;
+            optimizedUrl = addThumbnailTransform(data.url, 300);
+            clickAction = `onclick="window.open('${safeUrl}', '_blank')"`;
         }
         
         div.innerHTML = `
             <div ${clickAction} class="w-full h-full relative block">
-                <img src="${optimizedUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
+                <img src="${escapeHtml(optimizedUrl)}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Peserta">
                 ${playIcon}
                 <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-3 pt-10 translate-y-2 group-hover:translate-y-0 transition-transform">
-                    <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${data.participantName || 'Peserta OSI'}</p>
+                    <p class="text-white text-sm font-bold truncate text-center drop-shadow-sm">${safeName}</p>
                 </div>
             </div>
         `;
@@ -424,7 +577,7 @@ function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
     ctx.restore();
 }
 
-async function renderBlob(maxVidDim = 1080) {
+async function renderBlob() {
     return new Promise(async (resolve, reject) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -439,153 +592,24 @@ async function renderBlob(maxVidDim = 1080) {
             drawCover(ctx, imagePreview, canvas.width, canvas.height, false);
             if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
             
+            // Try WebP first (smaller files, ~0.92 quality ≈ JPEG 0.95 visual quality)
             canvas.toBlob((blob) => {
-                finalMediaExt = 'jpg';
-                resolve(blob);
-            }, 'image/jpeg', 0.95);
-
-        } else if (mediaType === 'video') {
-            // Resolusi ditentukan oleh parameter maxVidDim (1080 = Full HD, 720 = fallback)
-            const MAX_VID_DIM = maxVidDim;
-            const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
-            canvas.width = Math.round(tW * scaleDown);
-            if (canvas.width % 2 !== 0) canvas.width++;
-            canvas.height = Math.round(tH * scaleDown);
-            if (canvas.height % 2 !== 0) canvas.height++;
-
-            // FIX: Jangan mute agar suara asli ikut terekam ke hasil akhir
-            videoPreview.muted = false;
-            videoPreview.loop = false;
-
-            // FIX: Reset dan langsung play tanpa menunggu event agar "user gesture" token tidak hilang (lolos autoplay)
-            videoPreview.currentTime = 0;
-            try {
-                await videoPreview.play();
-            } catch (playError) {
-                console.error('Video play() gagal saat render:', playError);
-                reject(new Error('Gagal memutar video untuk diproses. Coba tekan play manual dulu, lalu ulangi.'));
-                return;
-            }
-
-            const stream = canvas.captureStream(30);
-            
-            // FIX: Cara teraman ambil audio adalah via captureStream bawaan video element
-            try {
-                const vidStream = videoPreview.captureStream ? videoPreview.captureStream() : (videoPreview.mozCaptureStream ? videoPreview.mozCaptureStream() : null);
-                let audioAdded = false;
-                if (vidStream && vidStream.getAudioTracks().length > 0) {
-                    stream.addTrack(vidStream.getAudioTracks()[0]);
-                    audioAdded = true;
-                }
-                
-                // Fallback ke Web Audio API kalau cara di atas tidak didukung
-                if (!audioAdded) {
-                    if (!window.globalAudioCtx) {
-                        window.globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        window.globalMediaSource = window.globalAudioCtx.createMediaElementSource(videoPreview);
-                        window.globalAudioDest = window.globalAudioCtx.createMediaStreamDestination();
-                        window.globalMediaSource.connect(window.globalAudioDest);
-                        window.globalMediaSource.connect(window.globalAudioCtx.destination);
-                    }
-                    if (window.globalAudioCtx.state === 'suspended') await window.globalAudioCtx.resume();
-                    const audioTrack = window.globalAudioDest.stream.getAudioTracks()[0];
-                    if (audioTrack) stream.addTrack(audioTrack);
-                }
-            } catch (err) { 
-                console.warn('Gagal ekstrak audio:', err);
-            }
-
-            // Prioritaskan MP4 agar bisa diputar di galeri HP & laptop
-            // Chrome desktop butuh codec profile spesifik (avc1.42E01E) untuk support MP4 recording
-            let mimeType = 'video/webm';
-            const supportedTypes = [
-                // MP4 dengan codec profile spesifik (Chrome 121+ desktop)
-                'video/mp4;codecs="avc1.42E01E,opus"',
-                'video/mp4;codecs="avc1.64001f,opus"',
-                'video/mp4;codecs="avc1.42E01E"',
-                'video/mp4;codecs="avc1.64001f"',
-                'video/mp4;codecs=avc1.42E01E,opus',
-                'video/mp4;codecs=avc1.64001f,opus',
-                'video/mp4;codecs=avc1.42E01E',
-                // MP4 generic (Chrome mobile / Safari)
-                'video/mp4;codecs=avc1',
-                'video/mp4;codecs=h264',
-                'video/mp4',
-                // WebM H264 (beberapa browser support)
-                'video/webm;codecs=h264',
-                // WebM VP8/VP9 fallback
-                'video/webm;codecs=vp8,opus',
-                'video/webm;codecs=vp9,opus',
-                'video/webm;codecs=vp8',
-                'video/webm'
-            ];
-            
-            for (const type of supportedTypes) {
-                if (MediaRecorder.isTypeSupported(type)) {
-                    mimeType = type;
-                    console.log('MediaRecorder format:', type);
-                    break;
-                }
-            }
-
-            let mediaRecorder;
-            try {
-                // Bitrate tinggi (8 Mbps) untuk hasil super jernih di resolusi penuh
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 8000000 });
-            } catch (e) {
-                mediaRecorder = new MediaRecorder(stream);
-            }
-
-            const chunks = [];
-            let frameCount = 0;
-            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-            mediaRecorder.onstop = () => {
-                videoPreview.pause();
-
-                if (chunks.length === 0 || frameCount < 2) {
-                    reject(new Error('Video gagal dirender — tidak ada frame yang tercapture. Coba ulangi proses.'));
-                    return;
-                }
-                try {
-                    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType });
-                    if (blob.size < 10240) {
-                        reject(new Error('Hasil video terlalu kecil dan kemungkinan corrupt. Coba ulangi proses.'));
-                        return;
-                    }
-                    finalMediaExt = (mediaRecorder.mimeType || mimeType).includes('mp4') ? 'mp4' : 'webm';
+                if (blob) {
+                    finalMediaExt = 'webp';
                     resolve(blob);
-                } catch (err) { reject(err); }
-            };
-            
-            mediaRecorder.start(100);
-            const duration = videoPreview.duration || 1;
-            let lastDrawTime = 0;
-            const frameInterval = 1000 / 30;
-            
-            const drawFrame = (timestamp) => {
-                // FIX: Hanya berhenti jika status ended, jangan kalau sedang paused/buffer
-                if (videoPreview.ended) {
-                    if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-                    return;
+                } else {
+                    // Fallback to JPEG if browser doesn't support WebP encoding
+                    canvas.toBlob((jpegBlob) => {
+                        finalMediaExt = 'jpg';
+                        resolve(jpegBlob);
+                    }, 'image/jpeg', 0.95);
                 }
-                // FIX: Jangan gambar frame kalau video sedang buffering/paused
-                if (timestamp - lastDrawTime >= frameInterval && !videoPreview.paused) {
-                    lastDrawTime = timestamp;
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    drawCover(ctx, videoPreview, canvas.width, canvas.height, true);
-                    if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-                    frameCount++;
-                    
-                    const percent = Math.min((videoPreview.currentTime / duration) * 100, 100).toFixed(1);
-                    const pb = document.getElementById('progressBar2') || progressBar;
-                    const pt = document.getElementById('progressText2') || progressText;
-                    if (pb) pb.style.width = `${percent}%`;
-                    if (pt) pt.innerText = `Memproses Video: ${percent}%`;
-                }
-                requestAnimationFrame(drawFrame);
-            };
-            requestAnimationFrame(drawFrame);
+            }, 'image/webp', 0.92);
+
+        } else {
+            // Video rendering is now handled server-side by Cloudinary.
+            // This function is only called for image processing.
+            reject(new Error('Video diproses oleh server Cloudinary, bukan di browser.'));
         }
     });
 }
@@ -733,42 +757,16 @@ downloadPublishBtn.addEventListener('click', async () => {
     downloadPublishBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
-        if (mediaType === 'video') {
-            uploadProgressContainer.classList.remove('hidden');
-            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Menyiapkan Video Resolusi Penuh...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
-            
-            document.getElementById('progressContainer').classList.remove('hidden');
-            
-            // FIX: Hapus premature pause — biarkan renderBlob() yang mengontrol state video sepenuhnya
+        const tW = (twibbonOverlay.complete && twibbonOverlay.naturalWidth > 0) ? twibbonOverlay.naturalWidth : 1080;
+        const tH = (twibbonOverlay.complete && twibbonOverlay.naturalHeight > 0) ? twibbonOverlay.naturalHeight : 1080;
+        const previewRect = interactiveArea.getBoundingClientRect();
+        const isPhoto = (mediaType === 'image');
 
-            // AUTO-RETRY: Coba resolusi penuh (1920 = tidak di-scale untuk twibbon 1080x1920)
-            // Kalau gagal (HP crash), otomatis turun ke 720p
-            try {
-                finalMediaBlob = await renderBlob(1920);
-            } catch (hdError) {
-                console.warn('Render full-res gagal, retry di 720p:', hdError.message);
-                const pt2 = document.getElementById('progressText2');
-                if (pt2) pt2.innerText = 'Retry di 720p HD...';
-                if (progressBar) progressBar.style.width = '0%';
-                videoPreview.currentTime = 0;
-                try {
-                    finalMediaBlob = await renderBlob(720);
-                } catch (sdError) {
-                    throw new Error('Video gagal dirender. Coba ulangi proses. (' + sdError.message + ')');
-                }
-            }
-            
-            document.getElementById('progressContainer').classList.add('hidden');
-            uploadProgressContainer.innerHTML = '<svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>';
-        } else {
-            uploadProgressContainer.classList.remove('hidden');
-        }
+        uploadProgressContainer.classList.remove('hidden');
 
-        const isPhoto = (finalMediaExt === 'jpg' || finalMediaExt === 'png');
-        let uploadBlob = finalMediaBlob;
-        
-        // FIX: Untuk foto, download lokal (karena aman dan cepat)
         if (isPhoto) {
+            // ── PHOTO FLOW ──────────────────────────────────────────
+            // 1. Instant local download (from canvas-rendered WebP/JPEG blob)
             const objectUrl = URL.createObjectURL(finalMediaBlob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -777,77 +775,83 @@ downloadPublishBtn.addEventListener('click', async () => {
             document.body.appendChild(a);
             a.click();
             setTimeout(() => document.body.removeChild(a), 100);
-            
-            try { uploadBlob = await createLowResImageBlob(finalMediaBlob, 400); }
-            catch (err) { uploadBlob = finalMediaBlob; }
-        }
 
-        const formData = new FormData();
-        formData.append('file', uploadBlob, `twibbon.${finalMediaExt}`);
-        formData.append('upload_preset', UPLOAD_PRESET);
-        
-        const endpoint = isPhoto ? 'image/upload' : 'video/upload';
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${endpoint}`, {
-            method: 'POST', body: formData
-        });
-        const cloudData = await res.json();
-        
-        if (res.ok && cloudData.secure_url) {
-            // FIX: Untuk video, download dari Cloudinary agar file MP4-nya sempurna (durasi valid hasil transcode)
-            if (!isPhoto) {
-                try {
-                    const parts = cloudData.secure_url.split('/upload/');
-                    const downloadUrl = parts[0] + '/upload/q_auto/' + parts[1].split('.')[0] + '.mp4';
-                    
-                    const uploadText = document.querySelector('#uploadProgressContainer span');
-                    if (uploadText) uploadText.innerText = 'Menyiapkan File Download...';
+            // 2. Upload ORIGINAL photo to Cloudinary (not the rendered blob)
+            uploadProgressContainer.innerHTML = '<svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>';
 
-                    const vidRes = await fetch(downloadUrl);
-                    if (vidRes.ok) {
-                        const vidBlob = await vidRes.blob();
-                        const objectUrl = URL.createObjectURL(vidBlob);
-                        const a = document.createElement('a');
-                        a.style.display = 'none';
-                        a.href = objectUrl;
-                        a.download = `Twibbon_OSI_HIMASI_${Date.now()}.mp4`;
-                        document.body.appendChild(a);
-                        a.click();
-                        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(objectUrl); }, 100);
-                    } else {
-                        throw new Error("Gagal load mp4 dari server");
-                    }
-                } catch (e) {
-                    console.error("Fallback ke local blob", e);
-                    const objectUrl = URL.createObjectURL(finalMediaBlob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = objectUrl;
-                    a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(objectUrl); }, 100);
-                }
-            }
+            const cloudData = await uploadLargeFile(mediaFile, 'image');
 
+            if (!cloudData.secure_url) throw new Error("Gagal upload ke Cloudinary");
+
+            // 3. Build server-side overlay URL for gallery
+            const twibbonPublicId = extractCloudinaryPublicId(globalTwibbonPhotoUrl);
+            const galleryUrl = twibbonPublicId
+                ? buildCloudinaryOverlayUrl(cloudData.secure_url, twibbonPublicId, tW, tH, previewRect)
+                : cloudData.secure_url; // fallback if twibbon id extraction fails
+
+            // 4. Save overlay URL to Firestore gallery
             await addDoc(collection(db, "gallery"), {
-                url: cloudData.secure_url,
+                url: galleryUrl,
                 participantName: nameValue,
-                type: isPhoto ? 'image' : 'video',
+                type: 'image',
                 createdAt: new Date()
             });
-            initApp();
-            
-            uploadProgressContainer.classList.add('hidden');
-            document.getElementById('resultActions').classList.add('hidden');
-            document.getElementById('successStateContainer')?.classList.remove('hidden');
-            document.getElementById('successStateContainer')?.classList.add('flex');
-            
-            if (!isPhoto) {
-                const note = document.getElementById('videoDurationNote');
-                if (note) note.classList.remove('hidden');
-            }
+
         } else {
-            throw new Error(cloudData.error ? cloudData.error.message : "Gagal upload Cloudinary");
+            // ── VIDEO FLOW ──────────────────────────────────────────
+            // 1. Upload ORIGINAL video to Cloudinary (chunked for reliability)
+            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Mengunggah Video...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
+
+            const cloudData = await uploadLargeFile(mediaFile, 'video', (pct) => {
+                const pb2 = document.getElementById('progressBar2');
+                const pt2 = document.getElementById('progressText2');
+                if (pb2) pb2.style.width = `${pct}%`;
+                if (pt2) pt2.innerText = `Mengunggah Video: ${pct}%`;
+            });
+
+            if (!cloudData.secure_url) throw new Error("Gagal upload ke Cloudinary");
+
+            // 2. Build server-side overlay URL
+            const twibbonPublicId = extractCloudinaryPublicId(globalTwibbonVideoUrl);
+            const overlayUrl = twibbonPublicId
+                ? buildCloudinaryOverlayUrl(cloudData.secure_url, twibbonPublicId, tW, tH, previewRect)
+                : cloudData.secure_url;
+
+            // 3. Download overlayed video via Cloudinary fl_attachment
+            //    No double-fetch: we uploaded the RAW video, now downloading the COMPOSED output.
+            const uploadText = document.querySelector('#uploadProgressContainer span') || document.getElementById('progressText2');
+            if (uploadText) uploadText.innerText = 'Menyiapkan File Download...';
+
+            const downloadUrl = overlayUrl.replace('/upload/', '/upload/fl_attachment/');
+            const dlLink = document.createElement('a');
+            dlLink.href = downloadUrl;
+            dlLink.download = `Twibbon_OSI_HIMASI_${Date.now()}.mp4`;
+            dlLink.target = '_blank';
+            dlLink.rel = 'noopener noreferrer';
+            dlLink.style.display = 'none';
+            document.body.appendChild(dlLink);
+            dlLink.click();
+            setTimeout(() => document.body.removeChild(dlLink), 200);
+
+            // 4. Save overlay URL to Firestore gallery
+            await addDoc(collection(db, "gallery"), {
+                url: overlayUrl,
+                participantName: nameValue,
+                type: 'video',
+                createdAt: new Date()
+            });
+        }
+
+        // ── Success state (shared) ──
+        initApp();
+        uploadProgressContainer.classList.add('hidden');
+        document.getElementById('resultActions').classList.add('hidden');
+        document.getElementById('successStateContainer')?.classList.remove('hidden');
+        document.getElementById('successStateContainer')?.classList.add('flex');
+
+        if (!isPhoto) {
+            const note = document.getElementById('videoDurationNote');
+            if (note) note.classList.remove('hidden');
         }
     } catch (err) {
         console.error(err);
@@ -858,28 +862,6 @@ downloadPublishBtn.addEventListener('click', async () => {
         uploadProgressContainer.classList.add('hidden');
     }
 });
-
-function createLowResImageBlob(fullResBlob, maxSize) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            try {
-                const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-                const smallCanvas = document.createElement('canvas');
-                smallCanvas.width = Math.round(img.width * scale);
-                smallCanvas.height = Math.round(img.height * scale);
-                const sCtx = smallCanvas.getContext('2d');
-                sCtx.drawImage(img, 0, 0, smallCanvas.width, smallCanvas.height);
-                smallCanvas.toBlob((blob) => {
-                    URL.revokeObjectURL(img.src);
-                    if (blob) resolve(blob); else reject(new Error('Gagal kompres'));
-                }, 'image/jpeg', 0.70);
-            } catch (err) { reject(err); }
-        };
-        img.onerror = () => reject(new Error('Gagal muat gambar'));
-        img.src = URL.createObjectURL(fullResBlob);
-    });
-}
 
 function resetUI() {
     processBtn.disabled = false;
