@@ -795,14 +795,35 @@ downloadPublishBtn.addEventListener('click', async () => {
         if (res.ok && cloudData.secure_url) {
             // FIX: Untuk video, download dari Cloudinary agar file MP4-nya sempurna (durasi valid hasil transcode)
             if (!isPhoto) {
-                const parts = cloudData.secure_url.split('/upload/');
-                const downloadUrl = parts[0] + '/upload/fl_attachment/q_auto/' + parts[1].split('.')[0] + '.mp4';
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = downloadUrl;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => document.body.removeChild(a), 100);
+                try {
+                    const parts = cloudData.secure_url.split('/upload/');
+                    const downloadUrl = parts[0] + '/upload/q_auto/' + parts[1].split('.')[0] + '.mp4';
+                    
+                    const vidRes = await fetch(downloadUrl);
+                    if (vidRes.ok) {
+                        const vidBlob = await vidRes.blob();
+                        const objectUrl = URL.createObjectURL(vidBlob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = objectUrl;
+                        a.download = `Twibbon_OSI_HIMASI_${Date.now()}.mp4`;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(objectUrl); }, 100);
+                    } else {
+                        throw new Error("Gagal load mp4 dari server");
+                    }
+                } catch (e) {
+                    console.error("Fallback ke local blob", e);
+                    const objectUrl = URL.createObjectURL(finalMediaBlob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = objectUrl;
+                    a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(objectUrl); }, 100);
+                }
             }
 
             await addDoc(collection(db, "gallery"), {
