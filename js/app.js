@@ -764,18 +764,20 @@ downloadPublishBtn.addEventListener('click', async () => {
             uploadProgressContainer.classList.remove('hidden');
         }
 
-        const objectUrl = URL.createObjectURL(finalMediaBlob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = objectUrl;
-        a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => document.body.removeChild(a), 100);
-
-        let uploadBlob = finalMediaBlob;
         const isPhoto = (finalMediaExt === 'jpg' || finalMediaExt === 'png');
+        let uploadBlob = finalMediaBlob;
+        
+        // FIX: Untuk foto, download lokal (karena aman dan cepat)
         if (isPhoto) {
+            const objectUrl = URL.createObjectURL(finalMediaBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = objectUrl;
+            a.download = `Twibbon_OSI_HIMASI_${Date.now()}.${finalMediaExt}`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => document.body.removeChild(a), 100);
+            
             try { uploadBlob = await createLowResImageBlob(finalMediaBlob, 400); }
             catch (err) { uploadBlob = finalMediaBlob; }
         }
@@ -791,6 +793,18 @@ downloadPublishBtn.addEventListener('click', async () => {
         const cloudData = await res.json();
         
         if (res.ok && cloudData.secure_url) {
+            // FIX: Untuk video, download dari Cloudinary agar file MP4-nya sempurna (durasi valid hasil transcode)
+            if (!isPhoto) {
+                const parts = cloudData.secure_url.split('/upload/');
+                const downloadUrl = parts[0] + '/upload/fl_attachment/q_auto/' + parts[1].split('.')[0] + '.mp4';
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = downloadUrl;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => document.body.removeChild(a), 100);
+            }
+
             await addDoc(collection(db, "gallery"), {
                 url: cloudData.secure_url,
                 participantName: nameValue,
