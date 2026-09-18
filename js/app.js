@@ -132,12 +132,12 @@ async function initApp() {
                 
                 if (data.type === 'video') {
                     let baseVideoUrl = data.url.split('.').slice(0, -1).join('.');
-                    optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_400,q_auto,f_auto/') + '.jpg';
+                    optimizedUrl = baseVideoUrl.replace('/upload/', '/upload/w_300,q_auto,f_auto/') + '.jpg';
                     playIcon = '<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors"><div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg></div></div>';
-                    const streamUrl = data.url.replace('/upload/', '/upload/w_480,q_auto/');
+                    const streamUrl = data.url.replace('/upload/', '/upload/w_360,q_auto/');
                     clickAction = `onclick="window.open('${streamUrl}', '_blank')"`;
                 } else {
-                    optimizedUrl = data.url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
+                    optimizedUrl = data.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/');
                     clickAction = `onclick="window.open('${data.url}', '_blank')"`;
                 }
                 
@@ -393,7 +393,7 @@ function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
     ctx.restore();
 }
 
-async function renderBlob() {
+async function renderBlob(maxVidDim = 1080) {
     return new Promise(async (resolve, reject) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -411,11 +411,11 @@ async function renderBlob() {
             canvas.toBlob((blob) => {
                 finalMediaExt = 'jpg';
                 resolve(blob);
-            }, 'image/jpeg', 0.90);
+            }, 'image/jpeg', 0.95);
 
         } else if (mediaType === 'video') {
-            // FIX: Turunkan resolusi ke 720p agar encoder H264 Android tidak crash/berhenti di tengah jalan
-            const MAX_VID_DIM = 720;
+            // Resolusi ditentukan oleh parameter maxVidDim (1080 = Full HD, 720 = fallback)
+            const MAX_VID_DIM = maxVidDim;
             const scaleDown = Math.min(MAX_VID_DIM / tW, MAX_VID_DIM / tH, 1);
             canvas.width = Math.round(tW * scaleDown);
             if (canvas.width % 2 !== 0) canvas.width++;
@@ -486,8 +486,8 @@ async function renderBlob() {
 
             let mediaRecorder;
             try {
-                // FIX: Turunkan bitrate sedikit untuk stabilitas hardware encoder
-                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 2500000 });
+                // Bitrate tinggi (5 Mbps) untuk hasil jernih di resolusi Full HD
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
             } catch (e) {
                 mediaRecorder = new MediaRecorder(stream);
             }
@@ -689,14 +689,28 @@ downloadPublishBtn.addEventListener('click', async () => {
     try {
         if (mediaType === 'video') {
             uploadProgressContainer.classList.remove('hidden');
-            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Menyiapkan Video HD...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
+            uploadProgressContainer.innerHTML = '<div class="flex flex-col items-center w-full"><span class="text-sm font-bold text-navy mb-2" id="progressText2">Menyiapkan Video Full HD (1080p)...</span><div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div id="progressBar2" class="bg-gold h-2 rounded-full" style="width: 0%"></div></div></div>';
             
             document.getElementById('progressContainer').classList.remove('hidden');
             
             // FIX: Hapus premature pause — biarkan renderBlob() yang mengontrol state video sepenuhnya
             // Sebelumnya: cloneVid.pause() di sini menyebabkan race condition
 
-            finalMediaBlob = await renderBlob();
+            // AUTO-RETRY: Coba 1080p dulu, kalau gagal otomatis turun ke 720p
+            try {
+                finalMediaBlob = await renderBlob(1080);
+            } catch (hdError) {
+                console.warn('Render 1080p gagal, retry di 720p:', hdError.message);
+                const pt2 = document.getElementById('progressText2');
+                if (pt2) pt2.innerText = 'Retry di 720p HD...';
+                if (progressBar) progressBar.style.width = '0%';
+                videoPreview.currentTime = 0;
+                try {
+                    finalMediaBlob = await renderBlob(720);
+                } catch (sdError) {
+                    throw new Error('Video gagal dirender baik di 1080p maupun 720p. Coba ulangi proses. (' + sdError.message + ')');
+                }
+            }
             
             document.getElementById('progressContainer').classList.add('hidden');
             uploadProgressContainer.innerHTML = '<svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>';
@@ -716,7 +730,7 @@ downloadPublishBtn.addEventListener('click', async () => {
         let uploadBlob = finalMediaBlob;
         const isPhoto = (finalMediaExt === 'jpg' || finalMediaExt === 'png');
         if (isPhoto) {
-            try { uploadBlob = await createLowResImageBlob(finalMediaBlob, 480); }
+            try { uploadBlob = await createLowResImageBlob(finalMediaBlob, 400); }
             catch (err) { uploadBlob = finalMediaBlob; }
         }
 
