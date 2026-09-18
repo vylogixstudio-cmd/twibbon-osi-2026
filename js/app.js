@@ -317,17 +317,23 @@ async function initApp() {
             // Video Feature Toggle
             isVideoEnabled = (data.isVideoEnabled === true);
             const selectVideoBox = document.getElementById('selectVideoTwibbon');
-            const mainSubtitle = document.getElementById('mainSubtitle');
-            const step1Title = document.getElementById('step1Title');
+            const selectPhotoBox = document.getElementById('selectPhotoTwibbon');
+            const mainSubtext = document.getElementById('mainSubtext');
 
-            if (isVideoEnabled) {
-                if (selectVideoBox) selectVideoBox.classList.remove('hidden');
-                if (mainSubtitle) mainSubtitle.innerText = 'Unggah Foto atau Video Anda (Maks. 1 Menit). Hasil dirender dalam resolusi tinggi (HD).';
-                if (step1Title) step1Title.innerText = 'Pilih Format Twibbon';
-            } else {
+            if (!isVideoEnabled) {
                 if (selectVideoBox) selectVideoBox.classList.add('hidden');
-                if (mainSubtitle) mainSubtitle.innerText = 'Unggah Foto Anda. Hasil dirender dalam resolusi tinggi (HD).';
-                if (step1Title) step1Title.innerText = 'Template Twibbon';
+                if (mainSubtext) mainSubtext.innerText = 'Unggah Foto Anda. Hasil dirender dalam resolusi tinggi (HD).';
+                if (selectPhotoBox) {
+                    selectPhotoBox.classList.remove('max-w-[170px]');
+                    selectPhotoBox.classList.add('max-w-[190px]');
+                }
+            } else {
+                if (selectVideoBox) selectVideoBox.classList.remove('hidden');
+                if (mainSubtext) mainSubtext.innerText = 'Unggah Foto atau Video Anda (Maks. 1 Menit). Hasil dirender dalam resolusi tinggi (HD).';
+                if (selectPhotoBox) {
+                    selectPhotoBox.classList.remove('max-w-[190px]');
+                    selectPhotoBox.classList.add('max-w-[170px]');
+                }
             }
 
             // Caption Template for Maba
