@@ -655,19 +655,11 @@ async function renderBlob() {
             drawCover(ctx, imagePreview, canvas.width, canvas.height, false);
             if (twibbonOverlay.complete && twibbonOverlay.naturalHeight !== 0) ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
             
-            // Try WebP first (smaller files, ~0.92 quality ≈ JPEG 0.95 visual quality)
+            // Gunakan format JPEG berkualitas tinggi (0.95) agar kompatibel di semua galeri HP dan sosmed (IG, WA, TikTok)
             canvas.toBlob((blob) => {
-                if (blob) {
-                    finalMediaExt = 'webp';
-                    resolve(blob);
-                } else {
-                    // Fallback to JPEG if browser doesn't support WebP encoding
-                    canvas.toBlob((jpegBlob) => {
-                        finalMediaExt = 'jpg';
-                        resolve(jpegBlob);
-                    }, 'image/jpeg', 0.95);
-                }
-            }, 'image/webp', 0.92);
+                finalMediaExt = 'jpg';
+                resolve(blob);
+            }, 'image/jpeg', 0.95);
 
         } else {
             // Video rendering is now handled server-side by Cloudinary.
