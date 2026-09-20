@@ -180,12 +180,18 @@
                         <video id="finalVideoPreview" class="w-full h-auto hidden" controls playsinline></video>
                     </div>
 
-                    <div class="w-full mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <label for="participantName" class="block text-sm font-bold text-navy mb-2">Nama Panggilan <span class="text-red-500">*</span></label>
-                        <input type="text" id="participantName" placeholder="Ketik nama panggilanmu..." class="w-full text-sm px-4 py-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all shadow-sm" required>
-                        <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Otomatis tampil di Galeri OSI 2026.
+                    <div class="w-full mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3">
+                        <div>
+                            <label for="participantName" class="block text-xs font-bold text-navy mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
+                            <input type="text" id="participantName" placeholder="Ketik nama lengkapmu..." class="w-full text-sm px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="participantNim" class="block text-xs font-bold text-navy mb-1.5">NIM (Nomor Induk Mahasiswa) <span class="text-red-500">*</span></label>
+                            <input type="text" id="participantNim" placeholder="Contoh: 2026xxxxxx" class="w-full text-sm px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all shadow-sm" required>
+                        </div>
+                        <p class="text-[11px] text-slate-500 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Data otomatis disematkan ke Caption & Galeri OSI 2026.
                         </p>
                     </div>
 

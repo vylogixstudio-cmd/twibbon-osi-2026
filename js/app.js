@@ -259,6 +259,7 @@ if(playPauseBtn) {
 
 
 const participantName = document.getElementById('participantName');
+const participantNim = document.getElementById('participantNim');
 const publicGalleryGrid = document.getElementById('publicGalleryGrid');
 
 // New UI Elements
@@ -286,13 +287,22 @@ let globalLabelVideo = 'Untuk Video';
 
 let isVideoEnabled = false;
 let savedPreviewWidth = 350;
-let globalCaptionTemplate = `Halo semuanya! 👋
-Kenalin aku {nama}, siap mengikuti dan mensukseskan Orientasi Studi Mahasiswa Baru (OSI) 2026 Universitas Sunan Gresik! 🎓✨
+let globalCaptionTemplate = `< SYSTEM INITIALIZED : OSI USG 2026 /> ⚙️🌐
 
-"Inovasi Tiada Henti, Berkarakter dan Berprestasi"
+Halo Sahabat/i Keluarga Besar Sistem Informasi! 👋
+Logika sudah terhubung, sistem siap dijalankan. Kenalin, aku {nama} (NIM: {nim}) dari Angkatan 2026. Aku bangga dan siap menjadi bagian dari HIMASI, serta berkolaborasi penuh dalam Orientasi Sistem Informasi (OSI) Universitas Sunan Gresik 2026! 🚀💻
 
-Sampai jumpa di kampus tercinta! 🚀
-#OSI2026 #HIMASI #UniversitasSunanGresik #Maba2026`;
+*"THE ARCHITECT: THE FOUNDATION"*
+*Satu Logika, Satu Visi: Langkah Awal Mengkokohkan Fondasi Sistem Informasi.*
+
+Mari merancang masa depan dan membangun fondasi yang kokoh bersama di Program Studi Sistem Informasi dan HIMASI.
+See you at the foundation layer! ✨
+
+#OSIUSG2026
+#UniversitasSunanGresik
+#himpunanmahasiswa
+#sisteminformasi
+#himasi`;
 
 // ========================================
 // Initialize App: Load templates & gallery
@@ -809,9 +819,17 @@ retryBtn.addEventListener('click', () => {
 // ========================================
 downloadPublishBtn.addEventListener('click', async () => {
     const nameValue = participantName.value.trim();
+    const nimValue = participantNim ? participantNim.value.trim() : '';
+
     if (nameValue === "") {
-        alert("Hei! Isi Nama Panggilan dulu dong sebelum masuk galeri hehe.");
+        alert("Hei! Isi Nama Lengkap dulu dong sebelum lanjut hehe.");
         participantName.focus();
+        return;
+    }
+
+    if (nimValue === "") {
+        alert("Hei! Isi NIM (Nomor Induk Mahasiswa) dulu dong hehe.");
+        if (participantNim) participantNim.focus();
         return;
     }
 
@@ -881,6 +899,7 @@ downloadPublishBtn.addEventListener('click', async () => {
             await addDoc(collection(db, "gallery"), {
                 url: galleryUrl,
                 participantName: nameValue,
+                nim: nimValue,
                 type: 'image',
                 createdAt: new Date()
             });
@@ -919,6 +938,7 @@ downloadPublishBtn.addEventListener('click', async () => {
             await addDoc(collection(db, "gallery"), {
                 url: overlayUrl,
                 participantName: nameValue,
+                nim: nimValue,
                 type: 'video',
                 createdAt: new Date()
             });
@@ -931,8 +951,11 @@ downloadPublishBtn.addEventListener('click', async () => {
         document.getElementById('successStateContainer')?.classList.remove('hidden');
         document.getElementById('successStateContainer')?.classList.add('flex');
 
-        // Populate Personalized Caption
-        const personalizedCaption = globalCaptionTemplate.replace(/\{nama\}/gi, nameValue);
+        // Populate Personalized Caption with {nama} and {nim}
+        const personalizedCaption = globalCaptionTemplate
+            .replace(/\{nama\}|\[Nama Lengkap\]|\[nama\]/gi, nameValue)
+            .replace(/\{nim\}|\[Nomor NIM\]|\[NIM\]|\[nim\]/gi, nimValue);
+
         const captionDisplay = document.getElementById('captionTextDisplay');
         if (captionDisplay) {
             captionDisplay.innerText = personalizedCaption;

@@ -124,7 +124,7 @@ async function loadCurrentTemplate() {
             }
 
             // Caption Template
-            const defaultCaption = `Halo semuanya! 👋\nKenalin aku {nama}, siap mengikuti dan mensukseskan Orientasi Studi Mahasiswa Baru (OSI) 2026 Universitas Sunan Gresik! 🎓✨\n\n"Inovasi Tiada Henti, Berkarakter dan Berprestasi"\n\nSampai jumpa di kampus tercinta! 🚀\n#OSI2026 #HIMASI #UniversitasSunanGresik #Maba2026`;
+            const defaultCaption = `< SYSTEM INITIALIZED : OSI USG 2026 /> ⚙️🌐\n\nHalo Sahabat/i Keluarga Besar Sistem Informasi! 👋\nLogika sudah terhubung, sistem siap dijalankan. Kenalin, aku {nama} (NIM: {nim}) dari Angkatan 2026. Aku bangga dan siap menjadi bagian dari HIMASI, serta berkolaborasi penuh dalam Orientasi Sistem Informasi (OSI) Universitas Sunan Gresik 2026! 🚀💻\n\n*"THE ARCHITECT: THE FOUNDATION"*\n*Satu Logika, Satu Visi: Langkah Awal Mengkokohkan Fondasi Sistem Informasi.*\n\nMari merancang masa depan dan membangun fondasi yang kokoh bersama di Program Studi Sistem Informasi dan HIMASI.\nSee you at the foundation layer! ✨\n\n#OSIUSG2026\n#UniversitasSunanGresik\n#himpunanmahasiswa\n#sisteminformasi\n#himasi`;
             const captionInput = document.getElementById('captionTemplateInput');
             if (captionInput) {
                 captionInput.value = data.captionTemplate || defaultCaption;
