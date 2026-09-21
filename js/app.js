@@ -466,7 +466,7 @@ interactiveArea.addEventListener('touchmove', (e) => {
         e.preventDefault();
         const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         userScale = initialScale * (currentDistance / initialPinchDistance);
-        userScale = Math.max(0.1, Math.min(userScale, 3));
+        userScale = Math.max(0.1, Math.min(userScale, 3.5));
         zoomSlider.value = userScale;
         updateTransformUI();
     }
@@ -484,7 +484,7 @@ window.addEventListener('touchend', (e) => {
 interactiveArea.addEventListener('wheel', (e) => {
     e.preventDefault();
     userScale -= e.deltaY * 0.002;
-    userScale = Math.max(0.1, Math.min(userScale, 3));
+    userScale = Math.max(0.1, Math.min(userScale, 3.5));
     zoomSlider.value = userScale;
     updateTransformUI();
 }, { passive: false });
@@ -622,16 +622,21 @@ function drawCover(ctx, media, canvasWidth, canvasHeight, isVideo) {
     }
     globalOffCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    const scaleCover = Math.max(canvasWidth / mediaWidth, canvasHeight / mediaHeight);
-    const defaultW = mediaWidth * scaleCover;
-    const defaultH = mediaHeight * scaleCover;
+    // Fit media intact (contain mode for photo), matching CSS object-contain
+    const scale = isVideo
+        ? Math.max(canvasWidth / mediaWidth, canvasHeight / mediaHeight)
+        : Math.min(canvasWidth / mediaWidth, canvasHeight / mediaHeight);
+    const defaultW = mediaWidth * scale;
+    const defaultH = mediaHeight * scale;
     const defaultX = (canvasWidth - defaultW) / 2;
     const defaultY = (canvasHeight - defaultH) / 2;
     globalOffCtx.drawImage(media, defaultX, defaultY, defaultW, defaultH);
 
     const previewRect = interactiveArea.getBoundingClientRect();
-    const ratioX = canvasWidth / previewRect.width;
-    const ratioY = canvasHeight / previewRect.height;
+    const pW = (previewRect && previewRect.width > 0) ? previewRect.width : savedPreviewWidth;
+    const pH = (previewRect && previewRect.height > 0) ? previewRect.height : savedPreviewWidth;
+    const ratioX = canvasWidth / pW;
+    const ratioY = canvasHeight / pH;
     
     ctx.save();
     ctx.translate(canvasWidth / 2, canvasHeight / 2);
@@ -872,7 +877,7 @@ downloadPublishBtn.addEventListener('click', async () => {
 
         if (isPhoto) {
             // ── PHOTO FLOW ──────────────────────────────────────────
-            // 1. Instant local download (from canvas-rendered WebP/JPEG blob)
+            // 1. Instant local download (from canvas-rendered JPEG blob)
             const objectUrl = URL.createObjectURL(finalMediaBlob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -882,20 +887,17 @@ downloadPublishBtn.addEventListener('click', async () => {
             a.click();
             setTimeout(() => document.body.removeChild(a), 100);
 
-            // 2. Upload ORIGINAL photo to Cloudinary (not the rendered blob)
+            // 2. Upload RENDERED photo (with twibbon) to Cloudinary for gallery
             uploadProgressContainer.innerHTML = '<svg class="w-5 h-5 animate-spin text-gold" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm text-slate-600 font-medium">Mengunggah ke Galeri...</span>';
 
-            const cloudData = await uploadLargeFile(mediaFile, 'image');
+            const renderedFile = new File([finalMediaBlob], `twibbon_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const cloudData = await uploadLargeFile(renderedFile, 'image');
 
             if (!cloudData.secure_url) throw new Error("Gagal upload ke Cloudinary");
 
-            // 3. Build server-side overlay URL for gallery
-            const twibbonPublicId = extractCloudinaryPublicId(globalTwibbonPhotoUrl);
-            const galleryUrl = twibbonPublicId
-                ? buildCloudinaryOverlayUrl(cloudData.secure_url, twibbonPublicId, tW, tH, previewRect)
-                : cloudData.secure_url; // fallback if twibbon id extraction fails
+            const galleryUrl = cloudData.secure_url;
 
-            // 4. Save overlay URL to Firestore gallery
+            // 3. Save to Firestore gallery
             await addDoc(collection(db, "gallery"), {
                 url: galleryUrl,
                 participantName: nameValue,
